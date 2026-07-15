@@ -1,0 +1,35 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.4",
+	"Category": "Game",
+	"Description": "The Puffers Club (working title: Empire City Online) - persistent open-world crime, business, and property-building game.",
+	"Modules": [
+		{
+			"Name": "PuffersClub",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"GameplayAbilities"
+			]
+		}
+	],
+	"Plugins": [
+		{ "Name": "GameplayAbilities", "Enabled": true },
+		{ "Name": "EnhancedInput", "Enabled": true },
+		{ "Name": "ChaosVehiclesPlugin", "Enabled": true },
+		{ "Name": "CommonUI", "Enabled": true },
+		{ "Name": "MassEntity", "Enabled": true },
+		{ "Name": "MassGameplay", "Enabled": true },
+		{ "Name": "MassAI", "Enabled": true },
+		{ "Name": "Metasound", "Enabled": true },
+		{ "Name": "ReplicationGraph", "Enabled": true },
+		{ "Name": "OnlineSubsystemSteam", "Enabled": true },
+		{ "Name": "OnlineServicesEOS", "Enabled": false }
+	],
+	"TargetPlatforms": [
+		"Windows",
+		"Linux",
+		"IOS"
+	]
+}

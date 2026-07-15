@@ -1,0 +1,27 @@
+# --- Unreal Engine ---
+game/Binaries/
+game/DerivedDataCache/
+game/Intermediate/
+game/Saved/
+game/Build/
+game/.vs/
+game/*.sln
+game/Plugins/**/Binaries/
+game/Plugins/**/Intermediate/
+
+# --- Node / backend ---
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/*.log
+
+# --- Python tools ---
+tools/**/__pycache__/
+tools/**/.venv/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
