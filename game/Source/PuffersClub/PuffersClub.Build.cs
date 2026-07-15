@@ -17,6 +17,8 @@ public class PuffersClub : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"ChaosVehicles",
+			"AIModule",
+			"NavigationSystem",
 			"NetCore"
 		});
 

@@ -1,10 +1,12 @@
 #include "Core/PCGameMode.h"
 #include "Characters/PCCharacter.h"
+#include "Core/PCPlayerState.h"
 #include "PuffersClub.h"
 
 APCGameMode::APCGameMode()
 {
 	DefaultPawnClass = APCCharacter::StaticClass();
+	PlayerStateClass = APCPlayerState::StaticClass();
 }
 
 void APCGameMode::PostLogin(APlayerController* NewPlayer)

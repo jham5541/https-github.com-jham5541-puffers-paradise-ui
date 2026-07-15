@@ -25,11 +25,15 @@
 
 | Area | Contents |
 |---|---|
-| `Core/` | Game mode, game state, player state |
-| `Characters/` | Third-person character, movement, input |
-| `Abilities/` | Gameplay Ability System: attributes, ability stubs |
-| `Heat/` | The heat (law-enforcement response) subsystem |
-| `Economy/` | Client-side wallet mirror; server-authoritative hooks |
+| `Core/` | Game mode, player state (server-authoritative wallet) |
+| `Characters/` | Third-person GAS character, presets + selection subsystem |
+| `Abilities/` | Gameplay Ability System: health/stamina/armor attributes |
+| `Heat/` | The heat (law-enforcement response) component |
+| `Vehicles/` | Chaos Vehicles base pawn with chase camera + driving input |
+| `Weapons/` | Server-validated hitscan weapon component |
+| `AI/` | Ambient NPC + AI controller with crime-witnessing perception |
+| `Missions/` | Mission data assets + replicated per-player progress |
+| `Interaction/` | Interactable interface (vehicles, doors, mission givers) |
 
 Phase 1 scope lives here (see `docs/production/roadmap.md`): character
 controller, camera, one vehicle, one weapon, one NPC, one mission, small test
