@@ -1,0 +1,17 @@
+{
+  "name": "puffers-paradise-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Puffers Paradise — Empire City: browser open-world crime sandbox (Three.js)",
+  "scripts": {
+    "setup": "npm install && npm run vendor",
+    "vendor": "mkdir -p vendor && cp node_modules/three/build/three.module.js vendor/ && rm -rf vendor/addons && cp -r node_modules/three/examples/jsm vendor/addons",
+    "serve": "node tools/serve.mjs",
+    "shots": "node tools/shot.mjs",
+    "charshots": "node tools/charshot.mjs",
+    "playtest": "node tools/playtest.mjs"
+  },
+  "dependencies": { "three": "0.169.0" },
+  "devDependencies": { "playwright-core": "^1.49.0" }
+}

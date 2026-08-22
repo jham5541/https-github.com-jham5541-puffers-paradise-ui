@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Puffers Paradise — Empire City</title>
+<style>
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
+  #app { position:fixed; inset:0; }
+  #app canvas { display:block; }
+  #ui { position:fixed; inset:0; pointer-events:none; font-family:'Arial Narrow', 'Helvetica Neue', Arial, sans-serif; }
+  #boot {
+    position:fixed; inset:0; background:#0b0b10; color:#cfa8ff; display:flex;
+    align-items:center; justify-content:center; flex-direction:column; gap:14px;
+    font-family:'Arial Black', Arial, sans-serif; z-index:99; transition:opacity .6s;
+  }
+  #boot .logo { font-size:42px; letter-spacing:2px; text-shadow:0 0 24px #7b3fbf; }
+  #boot .bar { width:280px; height:6px; background:#1c1c26; border-radius:3px; overflow:hidden; }
+  #boot .bar i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#7b3fbf,#c77b3a); transition:width .2s; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="ui"></div>
+<div id="boot"><div class="logo">PUFFERS PARADISE</div><div class="bar"><i id="bootbar"></i></div><div id="bootmsg" style="font-size:12px;font-family:Arial;color:#8b8b9a">rolling up the city…</div></div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

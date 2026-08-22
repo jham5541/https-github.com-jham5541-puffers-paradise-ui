@@ -25,3 +25,9 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# web game
+web/node_modules/
+web/vendor/
+web/tools/shots/
+web/tools/charshots/
