@@ -1,0 +1,124 @@
+{
+	"Apartments": [
+		{
+			"UnitId": "APT_TestYard1",
+			"Name": "Test Yard studio",
+			"Bedrooms": 1,
+			"MonthlyFeeLabel": "$4.99 / month",
+			"StorageSlots": 20,
+			"bInCityArea": true
+		},
+		{
+			"UnitId": "APT_Downtown2",
+			"Name": "Downtown 2 bedroom",
+			"Bedrooms": 2,
+			"MonthlyFeeLabel": "$7.99 / month",
+			"StorageSlots": 30,
+			"bInCityArea": true
+		},
+		{
+			"UnitId": "APT_Penthouse3",
+			"Name": "Matrix Penthouse",
+			"Bedrooms": 3,
+			"MonthlyFeeLabel": "$11.99 / month",
+			"StorageSlots": 40,
+			"bInCityArea": true
+		}
+	],
+	"Vacancies": [
+		{
+			"UnitId": "STORE_TestYardCorner",
+			"Building": "Test Yard corner block",
+			"Floor": 0,
+			"FootprintM2": 90,
+			"CountyId": "Central",
+			"AllowedUses": [
+				"CANNABIS_SHOP",
+				"BODEGA",
+				"MERCH"
+			],
+			"Upfront": 500,
+			"WeeklyRent": 150,
+			"Capacity": 12,
+			"RequiredApprovals": [
+				"CountyLicense"
+			]
+		},
+		{
+			"UnitId": "STORE_Warehouse",
+			"Building": "Industrial warehouse",
+			"Floor": 0,
+			"FootprintM2": 400,
+			"CountyId": "Frontier",
+			"AllowedUses": [
+				"GROW",
+				"GARAGE"
+			],
+			"Upfront": 1200,
+			"WeeklyRent": 350,
+			"Capacity": 6,
+			"RequiredApprovals": [
+				"CountyLicense"
+			]
+		},
+		{
+			"UnitId": "STORE_CigarLounge",
+			"Building": "The Strip",
+			"Floor": 0,
+			"FootprintM2": 150,
+			"CountyId": "Central",
+			"AllowedUses": [
+				"NIGHTCLUB",
+				"RESTAURANT"
+			],
+			"Upfront": 900,
+			"WeeklyRent": 250,
+			"Capacity": 40
+		},
+		{
+			"UnitId": "STORE_Gym",
+			"Building": "Southside row",
+			"Floor": 1,
+			"FootprintM2": 120,
+			"CountyId": "Southside",
+			"AllowedUses": [
+				"PET_GROOMER",
+				"MERCH",
+				"BODEGA"
+			],
+			"Upfront": 600,
+			"WeeklyRent": 180,
+			"Capacity": 15
+		}
+	],
+	"Plots": [
+		{
+			"PlotId": "PLOT_Frontier_001",
+			"CountyId": "Frontier",
+			"Cells": 2,
+			"Price": 5000,
+			"MaxBuildings": 2,
+			"AllowedUses": [
+				"Home",
+				"GROW",
+				"GARAGE"
+			],
+			"MonthlyFeeLabel": "$2.99 / month",
+			"BuildZoneLotId": "LOT_F001"
+		},
+		{
+			"PlotId": "PLOT_Coast_001",
+			"CountyId": "Coast",
+			"Cells": 4,
+			"Price": 9000,
+			"MaxBuildings": 3,
+			"AllowedUses": [
+				"Home",
+				"RESTAURANT",
+				"NIGHTCLUB"
+			],
+			"MonthlyFeeLabel": "$4.99 / month",
+			"BuildZoneLotId": "LOT_C001"
+		}
+	]
+}

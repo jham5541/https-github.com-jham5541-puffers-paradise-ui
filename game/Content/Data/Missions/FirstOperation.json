@@ -1,0 +1,520 @@
+[
+  {
+    "Id": "FO01",
+    "Title": "First Paycheck",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [],
+      "RequiresWorldFlags": [],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 0
+    },
+    "Objectives": [
+      {
+        "Id": "FO01_Arrive",
+        "Stage": 0,
+        "Type": "GO_TO_LOCATION",
+        "Description": "Head to the corner shop for your shift"
+      },
+      {
+        "Id": "FO01_ClockIn",
+        "Stage": 1,
+        "Type": "INTERACT",
+        "Description": "Clock in at the back office terminal"
+      },
+      {
+        "Id": "FO01_Stock",
+        "Stage": 2,
+        "Type": "PERFORM_ACTIVITY",
+        "Description": "Restock the shelves before the rush"
+      },
+      {
+        "Id": "FO01_Serve",
+        "Stage": 3,
+        "Type": "BUSINESS_DECISION",
+        "Description": "Serve the customers at the register"
+      },
+      {
+        "Id": "FO01_ClockOut",
+        "Stage": 4,
+        "Type": "INTERACT",
+        "Description": "Clock out and collect your pay"
+      }
+    ],
+    "CheckpointStages": [],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [
+      "FO_FirstPaycheck"
+    ],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": true,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  },
+  {
+    "Id": "FO02",
+    "Title": "Pick Your Lane",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [
+        "FO01"
+      ],
+      "RequiresWorldFlags": [],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 800
+    },
+    "Objectives": [
+      {
+        "Id": "FO02_Meet",
+        "Stage": 0,
+        "Type": "GO_TO_LOCATION",
+        "Description": "Meet Nico the broker at the Test Yard corner block"
+      },
+      {
+        "Id": "FO02_Offers",
+        "Stage": 1,
+        "Type": "TALK",
+        "Description": "Hear both offers: the county license or the corner"
+      },
+      {
+        "Id": "FO02_Licensed",
+        "Stage": 2,
+        "Type": "BUSINESS_DECISION",
+        "Description": "Apply for a county cannabis license and lease the storefront (1,500)",
+        "ChoiceGroup": "Lane",
+        "WorldFlagsOnDone": [
+          "FO_Lane_Licensed"
+        ]
+      },
+      {
+        "Id": "FO02_Street",
+        "Stage": 2,
+        "Type": "BUSINESS_DECISION",
+        "Description": "Take over the corner stash from the old crew (800). Permanent: no cannabis license this career.",
+        "ChoiceGroup": "Lane",
+        "WorldFlagsOnDone": [
+          "FO_Lane_Street"
+        ]
+      },
+      {
+        "Id": "FO02_Clean",
+        "Stage": 2,
+        "Type": "BUSINESS_DECISION",
+        "Description": "Skip cannabis and open a bodega instead (900)",
+        "ChoiceGroup": "Lane",
+        "WorldFlagsOnDone": [
+          "FO_Lane_Clean"
+        ]
+      },
+      {
+        "Id": "FO02_Fixtures",
+        "Stage": 3,
+        "Type": "PERFORM_ACTIVITY",
+        "Description": "Install the fixtures your operation needs"
+      },
+      {
+        "Id": "FO02_Open",
+        "Stage": 4,
+        "Type": "INTERACT",
+        "Description": "Flip the sign and open for business"
+      },
+      {
+        "Id": "FO02_FirstSale",
+        "Stage": 5,
+        "Type": "BUSINESS_DECISION",
+        "Description": "Make your first sale"
+      }
+    ],
+    "CheckpointStages": [
+      3
+    ],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": false,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  },
+  {
+    "Id": "FO03",
+    "Title": "Corner Dispute",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [
+        "FO02"
+      ],
+      "RequiresWorldFlags": [],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 0
+    },
+    "Objectives": [
+      {
+        "Id": "FO03_Arrive",
+        "Stage": 0,
+        "Type": "GO_TO_LOCATION",
+        "Description": "A rival crew is waiting outside your spot"
+      },
+      {
+        "Id": "FO03_Talk",
+        "Stage": 1,
+        "Type": "TALK",
+        "Description": "Hear what they want"
+      },
+      {
+        "Id": "FO03_WalkAway",
+        "Stage": 2,
+        "Type": "INTERACT",
+        "Description": "Walk away and let them have the block tonight",
+        "ChoiceGroup": "Dispute"
+      },
+      {
+        "Id": "FO03_Surrender",
+        "Stage": 2,
+        "Type": "INTERACT",
+        "Description": "Hand over the cash on you to end it",
+        "ChoiceGroup": "Dispute",
+        "WorldFlagsOnDone": [
+          "FO_Dispute_Paid"
+        ]
+      },
+      {
+        "Id": "FO03_Fight",
+        "Stage": 2,
+        "Type": "DEFEND",
+        "Description": "Fight for the corner",
+        "ChoiceGroup": "Dispute",
+        "WorldFlagsOnDone": [
+          "FO_Dispute_Violent"
+        ]
+      },
+      {
+        "Id": "FO03_Escape",
+        "Stage": 3,
+        "Type": "LOSE_HEAT",
+        "Description": "Lose the heat before patrol rolls up",
+        "OnlyIfChosen": "FO03_Fight"
+      }
+    ],
+    "CheckpointStages": [],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": false,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  },
+  {
+    "Id": "FO04",
+    "Title": "Wrong Face",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [
+        "FO02"
+      ],
+      "RequiresWorldFlags": [],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 0
+    },
+    "Objectives": [
+      {
+        "Id": "FO04_Stopped",
+        "Stage": 0,
+        "Type": "TALK",
+        "Description": "A patrol officer stops you: a witness says you match the description"
+      },
+      {
+        "Id": "FO04_Lawyer",
+        "Stage": 1,
+        "Type": "TALK",
+        "Description": "Call Dana Reyes and have her pull the camera footage",
+        "ChoiceGroup": "Stop"
+      },
+      {
+        "Id": "FO04_Footage",
+        "Stage": 1,
+        "Type": "SEARCH_AREA",
+        "Description": "Find the corner camera footage yourself",
+        "ChoiceGroup": "Stop"
+      },
+      {
+        "Id": "FO04_Cleared",
+        "Stage": 2,
+        "Type": "INTERACT",
+        "Description": "Get the finding struck from your record"
+      }
+    ],
+    "CheckpointStages": [],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [
+      "FO_MistakeCleared"
+    ],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": false,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  },
+  {
+    "Id": "FO05",
+    "Title": "Off the Books",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [
+        "FO02"
+      ],
+      "RequiresWorldFlags": [],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 0
+    },
+    "Objectives": [
+      {
+        "Id": "FO05_Offer",
+        "Stage": 0,
+        "Type": "TALK",
+        "Description": "An old friend wants a bag sold off the books"
+      },
+      {
+        "Id": "FO05_Decline",
+        "Stage": 1,
+        "Type": "INTERACT",
+        "Description": "Turn it down",
+        "ChoiceGroup": "Bag"
+      },
+      {
+        "Id": "FO05_Sell",
+        "Stage": 1,
+        "Type": "DELIVER_ITEM",
+        "Description": "Make the hand-off behind the laundromat",
+        "ChoiceGroup": "Bag",
+        "WorldFlagsOnDone": [
+          "FO_SoldOffBooks"
+        ]
+      },
+      {
+        "Id": "FO05_Busted",
+        "Stage": 2,
+        "Type": "ESCAPE",
+        "Description": "Undercover unit: run for it",
+        "OnlyIfChosen": "FO05_Sell"
+      },
+      {
+        "Id": "FO05_Booked",
+        "Stage": 3,
+        "Type": "INTERACT",
+        "Description": "Get booked at the county station",
+        "OnlyIfChosen": "FO05_Sell"
+      }
+    ],
+    "CheckpointStages": [],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": false,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  },
+  {
+    "Id": "FO06",
+    "Title": "Back to Zero",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [
+        "FO01"
+      ],
+      "RequiresWorldFlags": [],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 0
+    },
+    "Objectives": [
+      {
+        "Id": "FO06_Manager",
+        "Stage": 0,
+        "Type": "TALK",
+        "Description": "Ask the shop manager for your old job back"
+      },
+      {
+        "Id": "FO06_ClockIn",
+        "Stage": 1,
+        "Type": "INTERACT",
+        "Description": "Clock in at the back office terminal"
+      },
+      {
+        "Id": "FO06_Serve",
+        "Stage": 2,
+        "Type": "BUSINESS_DECISION",
+        "Description": "Serve the customers at the register"
+      },
+      {
+        "Id": "FO06_ClockOut",
+        "Stage": 3,
+        "Type": "INTERACT",
+        "Description": "Clock out and collect your pay"
+      }
+    ],
+    "CheckpointStages": [],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": true,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  },
+  {
+    "Id": "FO07",
+    "Title": "County Hearing",
+    "Category": "Side",
+    "Act": "First Operation",
+    "PlayableCharacters": [
+      "Any"
+    ],
+    "Availability": {
+      "RequiresCompleted": [
+        "FO02"
+      ],
+      "RequiresWorldFlags": [
+        "FO_Lane_Licensed"
+      ],
+      "BlockedByWorldFlags": [],
+      "bLockedOnceMainStoryStarts": false,
+      "LockedWhenStarted": [],
+      "RequiresPuffCash": 0
+    },
+    "Objectives": [
+      {
+        "Id": "FO07_Hall",
+        "Stage": 0,
+        "Type": "GO_TO_LOCATION",
+        "Description": "Go to the Central County hall"
+      },
+      {
+        "Id": "FO07_Draft",
+        "Stage": 1,
+        "Type": "TALK",
+        "Description": "Draft the six-pound possession reform with the county clerk"
+      },
+      {
+        "Id": "FO07_Workers",
+        "Stage": 2,
+        "Type": "TALK",
+        "Description": "Get your staff to sign on"
+      },
+      {
+        "Id": "FO07_Neighbors",
+        "Stage": 2,
+        "Type": "TALK",
+        "Description": "Win over the neighborhood association"
+      },
+      {
+        "Id": "FO07_Testimony",
+        "Stage": 2,
+        "Type": "TALK",
+        "Description": "Give testimony at the public meeting"
+      },
+      {
+        "Id": "FO07_Submit",
+        "Stage": 3,
+        "Type": "INTERACT",
+        "Description": "Submit the proposal for review"
+      },
+      {
+        "Id": "FO07_Ruling",
+        "Stage": 4,
+        "Type": "TALK",
+        "Description": "Hear the judge's ruling"
+      }
+    ],
+    "CheckpointStages": [
+      2
+    ],
+    "FailEvents": [],
+    "WorldFlagsOnStart": [],
+    "WorldFlagsOnComplete": [],
+    "Rewards": {
+      "PuffCash": 0,
+      "Outfits": [],
+      "Collectibles": [],
+      "Abilities": []
+    },
+    "bReplayable": false,
+    "TelemetryTags": [
+      "first_operation"
+    ]
+  }
+]
