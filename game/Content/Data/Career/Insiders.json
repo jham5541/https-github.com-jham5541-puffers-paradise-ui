@@ -1,0 +1,153 @@
+{
+	"Insiders": [
+		{
+			"NpcId": "NPC_LawyerReyes",
+			"Name": "Dana Reyes",
+			"Role": "Lawyer",
+			"CountyId": "Central",
+			"Integrity": 0.85,
+			"Greed": 0.3,
+			"bOpenToRomance": true,
+			"IntimacyAffection": 70,
+			"GiftLikes": [
+				"ITEM_Watch",
+				"ITEM_Wine"
+			],
+			"GiftDislikes": [
+				"ITEM_StreetStock"
+			],
+			"Motives": [
+				"Career",
+				"Fairness"
+			],
+			"Requests": [
+				"REQ_CaseReview",
+				"REQ_ExpungeMistake"
+			],
+			"Bio": "Public defender turned private counsel. Honest work for a fair fee; won't touch anything crooked."
+		},
+		{
+			"NpcId": "NPC_ClerkHollis",
+			"Name": "Marcus Hollis",
+			"Role": "CountyOfficial",
+			"CountyId": "Southside",
+			"Integrity": 0.35,
+			"Greed": 0.6,
+			"bOpenToRomance": false,
+			"GiftLikes": [
+				"ITEM_GoldChain",
+				"ITEM_Cigars"
+			],
+			"Motives": [
+				"Money",
+				"Revenge"
+			],
+			"Requests": [
+				"REQ_FastPermit",
+				"REQ_LosePaperwork"
+			],
+			"Bio": "County permits clerk. Knows where every file is, and what it costs to misplace one."
+		},
+		{
+			"NpcId": "NPC_OfficerPike",
+			"Name": "Officer Jo Pike",
+			"Role": "Officer",
+			"CountyId": "Southside",
+			"Integrity": 0.5,
+			"Greed": 0.4,
+			"bOpenToRomance": true,
+			"IntimacyAffection": 65,
+			"GiftLikes": [
+				"ITEM_Coffee"
+			],
+			"Motives": [
+				"Career",
+				"Money"
+			],
+			"Requests": [
+				"REQ_PatrolSchedule",
+				"REQ_LookAway"
+			],
+			"Bio": "Patrol officer on the Southside beat. Ambitious; might report you to get ahead."
+		}
+	],
+	"Requests": [
+		{
+			"RequestId": "REQ_CaseReview",
+			"Description": "Review your case and represent you",
+			"Role": "Lawyer",
+			"bCorrupt": false,
+			"BaseQuote": 300,
+			"Exposure": 0,
+			"ReturnWindowHours": 24,
+			"OutcomeTags": [
+				"CaseReviewed"
+			]
+		},
+		{
+			"RequestId": "REQ_ExpungeMistake",
+			"Description": "Get a mistaken-identity finding struck",
+			"Role": "Lawyer",
+			"bCorrupt": false,
+			"BaseQuote": 200,
+			"Exposure": 0,
+			"ReturnWindowHours": 24,
+			"OutcomeTags": [
+				"FindingCorrected"
+			]
+		},
+		{
+			"RequestId": "REQ_FastPermit",
+			"Description": "Move your permit to the top of the pile",
+			"Role": "CountyOfficial",
+			"bCorrupt": true,
+			"BaseQuote": 400,
+			"Exposure": 0.4,
+			"ReturnWindowHours": 48,
+			"OutcomeTags": [
+				"PermitExpedited"
+			]
+		},
+		{
+			"RequestId": "REQ_LosePaperwork",
+			"Description": "Lose a rival's paperwork",
+			"Role": "CountyOfficial",
+			"bCorrupt": true,
+			"BaseQuote": 900,
+			"Exposure": 0.8,
+			"ReturnWindowHours": 48,
+			"OutcomeTags": [
+				"RivalDelayed"
+			]
+		},
+		{
+			"RequestId": "REQ_PatrolSchedule",
+			"Description": "Tell you when patrols pass your corner",
+			"Role": "Officer",
+			"bCorrupt": true,
+			"BaseQuote": 350,
+			"Exposure": 0.5,
+			"ReturnWindowHours": 24,
+			"OutcomeTags": [
+				"PatrolIntel"
+			]
+		},
+		{
+			"RequestId": "REQ_LookAway",
+			"Description": "Look the other way, then report it anyway",
+			"Role": "Officer",
+			"bCorrupt": true,
+			"BaseQuote": 500,
+			"Exposure": 0.7,
+			"bObserveAndReport": true,
+			"ReturnWindowHours": 24,
+			"OutcomeTags": [
+				"LocalCareer"
+			]
+		}
+	],
+	"BribePrices": {
+		"NPC_ClerkHollis": 400,
+		"NPC_OfficerPike": 500
+	}
+}

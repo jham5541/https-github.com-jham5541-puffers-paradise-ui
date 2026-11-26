@@ -1,0 +1,183 @@
+{
+	"Hooks": [
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO01_ClockIn",
+			"Actions": [
+				"ClockIn"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO01_ClockOut",
+			"Actions": [
+				"PayShift:220:SHOP_STAFF"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO02_Licensed",
+			"Actions": [
+				"StartOperation:CANNABIS_SHOP:OP_FIRST:Central"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO02_Street",
+			"Actions": [
+				"StartOperation:STREET_OP:OP_FIRST:Central"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO02_Clean",
+			"Actions": [
+				"StartOperation:BODEGA:OP_FIRST:Central"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO02_Fixtures",
+			"Actions": [
+				"InstallAllFixtures:OP_FIRST"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO02_Open",
+			"Actions": [
+				"OpenOperation:OP_FIRST"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO02_FirstSale",
+			"Actions": [
+				"Sale:OP_FIRST:250"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO03_Surrender",
+			"Actions": [
+				"Wallet:-200:Paid off the rival crew"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO03_Fight",
+			"Actions": [
+				"Incident:Central:1"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO04_Stopped",
+			"Actions": [
+				"Finding:OutfitMatch:0:0:Central"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO04_Cleared",
+			"Actions": [
+				"CorrectLastFinding:Camera footage shows someone else"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO05_Booked",
+			"Actions": [
+				"Finding:QualifyingStreetActivity:1:1:Central",
+				"Case:Central:5000:0:0.5"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO06_ClockIn",
+			"Actions": [
+				"ClockIn"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO06_ClockOut",
+			"Actions": [
+				"PayShift:180:SHOP_STAFF",
+				"Milestone:RecoveryJob"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO07_Draft",
+			"Actions": [
+				"Propose:REFORM_SIX_POUNDS:Central"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO07_Workers",
+			"Actions": [
+				"Support:Central:35"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO07_Neighbors",
+			"Actions": [
+				"Support:Central:35"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO07_Testimony",
+			"Actions": [
+				"Support:Central:35"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO07_Submit",
+			"Actions": [
+				"Review:Central"
+			]
+		},
+		{
+			"Event": "ObjectiveDone",
+			"Context": "FO07_Ruling",
+			"Actions": [
+				"Judge:Central"
+			]
+		},
+		{
+			"Event": "MissionStarted",
+			"Context": "LC05",
+			"Actions": [
+				"Notice:Lato's shop needs a county cannabis license. One verified street strike and it's gone for good."
+			]
+		},
+		{
+			"Event": "MissionCompleted",
+			"Context": "LC05",
+			"Actions": [
+				"StartOperation:CANNABIS_SHOP:OP_LATO_SHOP:Central:free",
+				"InstallAllFixtures:OP_LATO_SHOP",
+				"OpenOperation:OP_LATO_SHOP"
+			],
+			"bOnce": true
+		},
+		{
+			"Event": "MissionCompleted",
+			"Context": "CUS_ROUTINE",
+			"Actions": [
+				"Care:CustodyRoutine"
+			]
+		}
+	]
+}

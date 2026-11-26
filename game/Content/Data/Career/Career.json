@@ -1,0 +1,349 @@
+{
+	"CareWindowHours": 168,
+	"ApartmentGraceDays": 30,
+	"BillingPeriodDays": 30,
+	"VacancyReservationHours": 48,
+	"HiringMinimum": 500,
+	"PayrollDays": 7,
+	"RaidCarrySlots": 30,
+	"LicensedCapitalTarget": 1500,
+	"StreetCapitalTarget": 800,
+	"CivicAccessProfitableWeeks": 2,
+	"CivicAccessNetProfit": 2000,
+	"RegulatedOwnershipMissions": [
+		"LC05"
+	],
+	"RecoveryJobId": "SHOP_STAFF",
+	"CareActivities": [
+		{
+			"Id": "EatAndRest",
+			"Name": "Eat and rest",
+			"bAvailableInCustody": true,
+			"bAvailableInPublic": true
+		},
+		{
+			"Id": "HealthCheck",
+			"Name": "Clinic check-up",
+			"bAvailableInCustody": false,
+			"bAvailableInPublic": true
+		},
+		{
+			"Id": "PaidShift",
+			"Name": "Work a paid shift",
+			"bAvailableInCustody": false,
+			"bAvailableInPublic": true
+		},
+		{
+			"Id": "CustodyRoutine",
+			"Name": "Custody routine block",
+			"bAvailableInCustody": true,
+			"bAvailableInPublic": false
+		}
+	],
+	"Phases": [
+		{
+			"Id": "FirstPaycheck",
+			"Name": "First paycheck",
+			"TargetHours": 15
+		},
+		{
+			"Id": "FirstOperation",
+			"Name": "First operation",
+			"TargetHours": 20,
+			"MinLifetimeWages": 600,
+			"MinOperations": 1
+		},
+		{
+			"Id": "Established",
+			"Name": "Established",
+			"TargetHours": 25,
+			"MinOperations": 1,
+			"MinNetCannabisProfit": 2000
+		},
+		{
+			"Id": "Expansion",
+			"Name": "Expansion",
+			"TargetHours": 30,
+			"MinOperations": 2,
+			"MinNetCannabisProfit": 8000
+		},
+		{
+			"Id": "MultiCounty",
+			"Name": "Multi-county",
+			"TargetHours": 35,
+			"MinOperations": 3,
+			"MinCounties": 2,
+			"MinNetCannabisProfit": 20000
+		},
+		{
+			"Id": "Influence",
+			"Name": "Influence",
+			"TargetHours": 40,
+			"MinOperations": 4,
+			"MinCounties": 3,
+			"MinInfluence": 25
+		},
+		{
+			"Id": "Magnate",
+			"Name": "Magnate",
+			"TargetHours": 50,
+			"MinOperations": 6,
+			"MinCounties": 4,
+			"MinNetCannabisProfit": 100000,
+			"MinInfluence": 60
+		},
+		{
+			"Id": "Legacy",
+			"Name": "Legacy",
+			"TargetHours": 60,
+			"MinOperations": 8,
+			"MinCounties": 5,
+			"MinNetCannabisProfit": 250000,
+			"MinInfluence": 90
+		}
+	],
+	"Archetypes": [
+		{
+			"Id": "CANNABIS_SHOP",
+			"Name": "Licensed cannabis shop",
+			"Kind": "LicensedCannabis",
+			"EntryCost": 1500,
+			"RequiredStaff": 1,
+			"RequiredFixtures": [
+				"Counter",
+				"DisplayCase",
+				"Safe",
+				"ComplianceTerminal"
+			],
+			"StockCategories": [
+				"Flower",
+				"Edibles",
+				"Accessories"
+			],
+			"Upgrades": [
+				"SecondRegister",
+				"LoungeArea",
+				"DeliveryDesk"
+			],
+			"WeeklyOverhead": 250,
+			"Description": "A storefront under a county license. Every sale is recorded; one verified strike closes it for good."
+		},
+		{
+			"Id": "GROW",
+			"Name": "Licensed grow",
+			"Kind": "LicensedCannabis",
+			"EntryCost": 2500,
+			"RequiredStaff": 1,
+			"RequiredFixtures": [
+				"GrowTent",
+				"Lights",
+				"Ventilation",
+				"ComplianceTerminal"
+			],
+			"StockCategories": [
+				"Flower"
+			],
+			"Upgrades": [
+				"SecondRoom",
+				"Automation"
+			],
+			"WeeklyOverhead": 300,
+			"Description": "Supplies your licensed shops and wholesale buyers."
+		},
+		{
+			"Id": "STREET_OP",
+			"Name": "Street operation",
+			"Kind": "Street",
+			"EntryCost": 800,
+			"RequiredStaff": 0,
+			"RequiredFixtures": [
+				"Stash"
+			],
+			"StockCategories": [
+				"StreetStock"
+			],
+			"Upgrades": [
+				"Lookout",
+				"SecondCorner",
+				"CrewContract"
+			],
+			"WeeklyOverhead": 100,
+			"Description": "Corner stock, crews and territory. Starting one is a permanent commitment: no cannabis license for this career."
+		},
+		{
+			"Id": "RESTAURANT",
+			"Name": "Restaurant",
+			"Kind": "NonCannabis",
+			"EntryCost": 2000,
+			"RequiredStaff": 2,
+			"RequiredFixtures": [
+				"Kitchen",
+				"Tables"
+			],
+			"StockCategories": [
+				"Food"
+			],
+			"Upgrades": [
+				"Patio",
+				"Bar"
+			],
+			"WeeklyOverhead": 300,
+			"Description": "Food service. Never touched by a cannabis strike."
+		},
+		{
+			"Id": "BODEGA",
+			"Name": "Bodega",
+			"Kind": "NonCannabis",
+			"EntryCost": 900,
+			"RequiredStaff": 1,
+			"RequiredFixtures": [
+				"Counter",
+				"Shelves"
+			],
+			"StockCategories": [
+				"Snacks",
+				"Drinks"
+			],
+			"Upgrades": [
+				"LotteryMachine",
+				"HotFood"
+			],
+			"WeeklyOverhead": 120,
+			"Description": "Corner store."
+		},
+		{
+			"Id": "PET_GROOMER",
+			"Name": "Pet groomer",
+			"Kind": "NonCannabis",
+			"EntryCost": 1200,
+			"RequiredStaff": 1,
+			"RequiredFixtures": [
+				"GroomingTable",
+				"Tub"
+			],
+			"StockCategories": [
+				"PetSupplies"
+			],
+			"Upgrades": [
+				"Boarding"
+			],
+			"WeeklyOverhead": 150,
+			"Description": "Grooming and pet supplies."
+		},
+		{
+			"Id": "GARAGE",
+			"Name": "Garage",
+			"Kind": "NonCannabis",
+			"EntryCost": 1800,
+			"RequiredStaff": 1,
+			"RequiredFixtures": [
+				"Lift",
+				"Toolbench"
+			],
+			"StockCategories": [
+				"Parts"
+			],
+			"Upgrades": [
+				"PaintBooth",
+				"Tuning"
+			],
+			"WeeklyOverhead": 220,
+			"Description": "Repairs and tuning."
+		},
+		{
+			"Id": "NIGHTCLUB",
+			"Name": "Nightclub",
+			"Kind": "NonCannabis",
+			"EntryCost": 3500,
+			"RequiredStaff": 3,
+			"RequiredFixtures": [
+				"DJBooth",
+				"Bar",
+				"Speakers"
+			],
+			"StockCategories": [
+				"Drinks"
+			],
+			"Upgrades": [
+				"VIPRoom",
+				"Crossfader"
+			],
+			"WeeklyOverhead": 500,
+			"Description": "Music, drinks, door list."
+		},
+		{
+			"Id": "MERCH",
+			"Name": "Merch shop",
+			"Kind": "NonCannabis",
+			"EntryCost": 700,
+			"RequiredStaff": 1,
+			"RequiredFixtures": [
+				"Racks",
+				"Counter"
+			],
+			"StockCategories": [
+				"Apparel"
+			],
+			"Upgrades": [
+				"PrintPress"
+			],
+			"WeeklyOverhead": 90,
+			"Description": "Puffers apparel and collectibles."
+		}
+	],
+	"InsuranceProducts": [
+		{
+			"ProductId": "SELF_COVER",
+			"Name": "Self cover",
+			"Kind": "Self",
+			"Premium": 600,
+			"TermDays": 30,
+			"Benefit": 0,
+			"Insurer": "Puffington Mutual"
+		},
+		{
+			"ProductId": "TEAM_LIFE",
+			"Name": "Team member life policy",
+			"Kind": "TeamMember",
+			"Premium": 400,
+			"TermDays": 30,
+			"Benefit": 5000,
+			"Insurer": "Puffington Mutual"
+		},
+		{
+			"ProductId": "PARTNER_LIFE",
+			"Name": "Significant other life policy",
+			"Kind": "SignificantOther",
+			"Premium": 300,
+			"TermDays": 30,
+			"Benefit": 4000,
+			"Insurer": "Harbor Life"
+		}
+	],
+	"Lenders": [
+		{
+			"LenderId": "PAWN_EAST",
+			"Name": "Eastside Pawn & Loan",
+			"VehicleLtv": 0.45,
+			"HomeLtv": 0.0,
+			"JewelryLtv": 0.5,
+			"FeeRate": 0.08,
+			"InterestRate": 0.2,
+			"Installments": 2,
+			"DaysBetweenInstallments": 7,
+			"DefaultGraceDays": 2
+		},
+		{
+			"LenderId": "PUFF_CREDIT",
+			"Name": "Puffington Credit Union",
+			"VehicleLtv": 0.5,
+			"HomeLtv": 0.6,
+			"JewelryLtv": 0.35,
+			"FeeRate": 0.04,
+			"InterestRate": 0.12,
+			"Installments": 4,
+			"DaysBetweenInstallments": 7,
+			"DefaultGraceDays": 3
+		}
+	]
+}

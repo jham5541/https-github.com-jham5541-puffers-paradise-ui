@@ -1,0 +1,231 @@
+{
+	"DefaultCounty": "Central",
+	"Counties": [
+		{
+			"CountyId": "Central",
+			"Name": "Central County",
+			"MapCountyIds": [
+				"Westgate"
+			],
+			"SeedLaw": {
+				"CountyId": "Central",
+				"Version": 1,
+				"FineOnlyCapMg": 3500,
+				"FineOnlyFine": 100,
+				"Bands": [
+					{
+						"MaxMg": 28350,
+						"Fine": 500,
+						"CustodyYears": 0.5
+					},
+					{
+						"MaxMg": 453592,
+						"Fine": 1500,
+						"CustodyYears": 2
+					},
+					{
+						"MaxMg": 2721554,
+						"Fine": 5000,
+						"CustodyYears": 5
+					},
+					{
+						"MaxMg": -1,
+						"Fine": 10000,
+						"CustodyYears": 10
+					}
+				],
+				"FirearmMinimumYears": 0,
+				"bInsiderCorruption": false
+			},
+			"ViolenceReviewWindowDays": 14,
+			"ViolenceThreshold": 10,
+			"ViolenceApprovalThreshold": 10
+		},
+		{
+			"CountyId": "Heights",
+			"Name": "Heights County",
+			"MapCountyIds": [
+				"NorthPoint"
+			],
+			"SeedLaw": {
+				"CountyId": "Heights",
+				"Version": 1,
+				"FineOnlyCapMg": 3500,
+				"FineOnlyFine": 100,
+				"Bands": [
+					{
+						"MaxMg": 28350,
+						"Fine": 500,
+						"CustodyYears": 0.5
+					},
+					{
+						"MaxMg": 453592,
+						"Fine": 1500,
+						"CustodyYears": 2
+					},
+					{
+						"MaxMg": 2721554,
+						"Fine": 5000,
+						"CustodyYears": 5
+					},
+					{
+						"MaxMg": -1,
+						"Fine": 10000,
+						"CustodyYears": 10
+					}
+				],
+				"FirearmMinimumYears": 0,
+				"bInsiderCorruption": false
+			},
+			"ViolenceReviewWindowDays": 14,
+			"ViolenceThreshold": 10,
+			"ViolenceApprovalThreshold": 10
+		},
+		{
+			"CountyId": "Southside",
+			"Name": "Southside County",
+			"MapCountyIds": [
+				"EastSide"
+			],
+			"SeedLaw": {
+				"CountyId": "Southside",
+				"Version": 1,
+				"FineOnlyCapMg": 3500,
+				"FineOnlyFine": 100,
+				"Bands": [
+					{
+						"MaxMg": 28350,
+						"Fine": 500,
+						"CustodyYears": 0.5
+					},
+					{
+						"MaxMg": 453592,
+						"Fine": 1500,
+						"CustodyYears": 2
+					},
+					{
+						"MaxMg": 2721554,
+						"Fine": 5000,
+						"CustodyYears": 5
+					},
+					{
+						"MaxMg": -1,
+						"Fine": 10000,
+						"CustodyYears": 10
+					}
+				],
+				"FirearmMinimumYears": 0,
+				"bInsiderCorruption": true
+			},
+			"ViolenceReviewWindowDays": 14,
+			"ViolenceThreshold": 10,
+			"ViolenceApprovalThreshold": 10
+		},
+		{
+			"CountyId": "Frontier",
+			"Name": "Frontier County",
+			"MapCountyIds": [
+				"Ironwood"
+			],
+			"SeedLaw": {
+				"CountyId": "Frontier",
+				"Version": 1,
+				"FineOnlyCapMg": 3500,
+				"FineOnlyFine": 100,
+				"Bands": [
+					{
+						"MaxMg": 28350,
+						"Fine": 500,
+						"CustodyYears": 0.5
+					},
+					{
+						"MaxMg": 453592,
+						"Fine": 1500,
+						"CustodyYears": 2
+					},
+					{
+						"MaxMg": 2721554,
+						"Fine": 5000,
+						"CustodyYears": 5
+					},
+					{
+						"MaxMg": -1,
+						"Fine": 10000,
+						"CustodyYears": 10
+					}
+				],
+				"FirearmMinimumYears": 0,
+				"bInsiderCorruption": true
+			},
+			"ViolenceReviewWindowDays": 14,
+			"ViolenceThreshold": 10,
+			"ViolenceApprovalThreshold": 10
+		},
+		{
+			"CountyId": "Coast",
+			"Name": "Coast County",
+			"MapCountyIds": [
+				"SouthHarbor"
+			],
+			"SeedLaw": {
+				"CountyId": "Coast",
+				"Version": 1,
+				"FineOnlyCapMg": 3500,
+				"FineOnlyFine": 100,
+				"Bands": [
+					{
+						"MaxMg": 28350,
+						"Fine": 500,
+						"CustodyYears": 0.5
+					},
+					{
+						"MaxMg": 453592,
+						"Fine": 1500,
+						"CustodyYears": 2
+					},
+					{
+						"MaxMg": 2721554,
+						"Fine": 5000,
+						"CustodyYears": 5
+					},
+					{
+						"MaxMg": -1,
+						"Fine": 10000,
+						"CustodyYears": 10
+					}
+				],
+				"FirearmMinimumYears": 0,
+				"bInsiderCorruption": false
+			},
+			"ViolenceReviewWindowDays": 14,
+			"ViolenceThreshold": 10,
+			"ViolenceApprovalThreshold": 10
+		}
+	],
+	"Proposals": [
+		{
+			"Id": "REFORM_SIX_POUNDS",
+			"Title": "No prison for possession up to 6 lb",
+			"Kind": "PossessionReform",
+			"NewFineOnlyCapMg": 2721554,
+			"RequiredSupport": 100,
+			"ActivationDelayHours": 24
+		},
+		{
+			"Id": "FIREARM_MINIMUM_5Y",
+			"Title": "Five-year minimum for cannabis with a firearm",
+			"Kind": "FirearmMinimum",
+			"NewFirearmMinimumYears": 5,
+			"RequiredSupport": 100,
+			"ActivationDelayHours": 24
+		}
+	],
+	"CustodyScale": {
+		"Version": 1,
+		"BlocksPerSimulatedYear": 3,
+		"BlocksPerDay": 3,
+		"MinActiveSecondsPerBlock": 100,
+		"RoutineMission": "CUS_ROUTINE",
+		"FacilityId": "PRISON_PuffingtonState"
+	}
+}
