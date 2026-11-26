@@ -284,14 +284,7 @@ void UPuffersCareerSubsystem::Tick(float DeltaTime)
 	if (SecondsSinceHousekeeping >= 5.f)
 	{
 		SecondsSinceHousekeeping = 0.f;
-		PublishDueLaws();
-		if (IsSharedWorld() && HasAuthority())
-		{
-			AdvanceHousing();
-			AdvanceLoans();
-			CollectLeaseRent();
-			WeeklyRollover();
-		}
+		RunHousekeeping();
 	}
 
 	SecondsSinceSave += DeltaTime;
@@ -299,6 +292,22 @@ void UPuffersCareerSubsystem::Tick(float DeltaTime)
 	{
 		SecondsSinceSave = 0.f;
 		SaveNow();
+	}
+}
+
+void UPuffersCareerSubsystem::RunHousekeeping()
+{
+	if (!Save)
+	{
+		return;
+	}
+	PublishDueLaws();
+	if (IsSharedWorld() && HasAuthority())
+	{
+		AdvanceHousing();
+		AdvanceLoans();
+		CollectLeaseRent();
+		WeeklyRollover();
 	}
 }
 
@@ -750,7 +759,8 @@ bool UPuffersCareerSubsystem::OpenOperation(FName OperationId, FString& OutReaso
 	{
 		return true;
 	}
-	int32 Staff = 0;
+	// The owner works the counter, so a one-person shop can open on day one.
+	int32 Staff = 1;
 	for (const FPuffersEmployment& E : Save->Workforce.Employment)
 	{
 		Staff += (E.BusinessId == OperationId && E.State == EPuffersEmploymentState::Active) ? 1 : 0;

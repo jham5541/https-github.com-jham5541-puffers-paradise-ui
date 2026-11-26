@@ -507,7 +507,10 @@ public:
 	// Fails the active mission (license gate on regulated-ownership missions).
 	TFunction<void(FName)> FailActiveMission;
 
-	// Weekly rollover for profitable-week streaks and pay day. Called from Tick; tests call it directly.
+	// Due laws, tenancies, plots, loans, lease rent and the weekly rollover. Tick runs it every 5 s; tests call it after moving the clock.
+	void RunHousekeeping();
+
+	// Weekly rollover for profitable-week streaks and pay day. Called from RunHousekeeping; tests call it directly.
 	void WeeklyRollover();
 
 	// Called by the mission subsystem bindings (and tests) to run hooks.
