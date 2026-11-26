@@ -1,0 +1,187 @@
+{
+  "_comment": "How each mission objective plays. Type defaults, then the FIRST matching keyword rule (top to bottom), then the objective's override. Keywords match at the start of a word, case-insensitive. 'Choice': true limits a rule to choice-group options. Run Scripts/step_coverage.py after editing.",
+
+  "ExcludedMissions": ["BL01"],
+
+  "Defaults": {
+    "GO_TO_LOCATION":    { "Gameplay": "Reach", "StartMode": "Immediate" },
+    "ESCAPE":            { "Gameplay": "Escape", "StartMode": "Immediate" },
+    "TALK":              { "Gameplay": "Conversation" },
+    "INTERACT":          { "Gameplay": "Hold" },
+    "PERFORM_ACTIVITY":  { "Gameplay": "Rhythm" },
+    "SEARCH_AREA":       { "Gameplay": "Search", "StartMode": "Proximity" },
+    "DELIVER_ITEM":      { "Gameplay": "Delivery" },
+    "RECORD_VIDEO":      { "Gameplay": "Video" },
+    "TAKE_PHOTO":        { "Gameplay": "Photo" },
+    "DEFEND":            { "Gameplay": "Defend", "StartMode": "Proximity" },
+    "STEALTH_REACH":     { "Gameplay": "Stealth", "StartMode": "Proximity", "Role": "Security" },
+    "FOLLOW":            { "Gameplay": "Tail" },
+    "CHASE":             { "Gameplay": "Chase" },
+    "CHARACTER_SWITCH":  { "Gameplay": "Switch", "StartMode": "Immediate" },
+    "ENTER_VEHICLE":     { "Gameplay": "EnterVehicle", "StartMode": "Immediate" },
+    "BUSINESS_DECISION": { "Gameplay": "Negotiate" },
+    "LOSE_HEAT":         { "Gameplay": "LoseHeat", "StartMode": "Immediate", "Heat": 2 },
+    "DRIVE_ROUTE":       { "Gameplay": "Route", "bVehicle": true },
+    "CUSTOM_SCRIPTED":   { "Gameplay": "Prop" }
+  },
+
+  "KeywordRules": [
+    { "Keywords": ["draw and fire", "go in shooting", "fight back", "commit to the fight"],
+      "Params": { "Gameplay": "Combat", "Role": "Enforcer", "StartMode": "Immediate" } },
+
+    { "Types": ["INTERACT", "CHASE", "PERFORM_ACTIVITY"], "Keywords": ["tackle", "catch"],
+      "Params": { "Gameplay": "Chase" } },
+
+    { "Types": ["INTERACT", "FOLLOW"], "Keywords": ["escort"],
+      "Params": { "Gameplay": "Escort", "bPeaceful": true } },
+
+    { "Types": ["INTERACT", "FOLLOW"], "Keywords": ["follow the", "tail the"],
+      "Params": { "Gameplay": "Tail" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["record the", "quietly record"],
+      "Params": { "Gameplay": "Video", "Seconds": 10 } },
+
+    { "Types": ["INTERACT"], "Keywords": ["walk out"],
+      "Params": { "Gameplay": "Stealth", "Label": "Tension", "Role": "Enforcer", "StartMode": "Proximity" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["quietly", "sabotage"],
+      "Params": { "Gameplay": "Stealth", "Role": "Security", "StartMode": "Proximity" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["get yourself out"],
+      "Params": { "Gameplay": "Escape", "Role": "Enforcer", "StartMode": "Immediate" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["get the staff clear"],
+      "Params": { "Gameplay": "Escort", "Count": 4, "Label": "Staff" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["protect the", "step in"],
+      "Params": { "Gameplay": "Defend", "Seconds": 45, "StartMode": "Proximity" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["feed him"],
+      "Params": { "Gameplay": "Mash" } },
+
+    { "Types": ["INTERACT", "BUSINESS_DECISION"], "Choice": true,
+      "Params": { "Gameplay": "BusinessMenu" } },
+
+    { "Types": ["PERFORM_ACTIVITY", "SEARCH_AREA"], "Keywords": ["mac vision"],
+      "Params": { "Gameplay": "Scan", "GrantAbility": "MacVision", "Count": 3 } },
+
+    { "Types": ["TALK"], "Keywords": ["negotiate", "hammer out", "split the money", "sign blaze"],
+      "Params": { "Gameplay": "Negotiate" } },
+
+    { "Types": ["TALK"], "Keywords": ["convince", "talk your way", "talk him", "talk the", "talk down", "talk everybody",
+        "get past", "deal with", "calm", "pitch", "apologize", "sweet-talk", "charm", "handle", "settle", "run the",
+        "act like", "rally", "make the case", "make peace", "work the room", "expose", "get terp", "blame",
+        "take vanessa", "get dre", "walk the inspector", "admit", "give a speech", "brag", "put him on blast"],
+      "Params": { "Gameplay": "Persuade" } },
+
+    { "Types": ["PERFORM_ACTIVITY", "INTERACT"], "Keywords": ["eat", "chow"],
+      "Params": { "Gameplay": "Mash", "Seconds": 8 } },
+
+    { "Types": ["PERFORM_ACTIVITY", "INTERACT", "BUSINESS_DECISION"],
+      "Keywords": ["cook", "plate", "serve", "file the", "paperwork", "ledger", "books", "reconcile", "numbers",
+        "checklist", "discrepancy", "build the pitch", "intake", "schedule", "check the camera", "check your phone",
+        "check on your", "write", "read the", "analytics", "plan the", "pick the fixtures", "source the", "gather", "borrow the",
+        "round up", "get industrial", "get a mannequin", "get forty"],
+      "Params": { "Gameplay": "Memory" } },
+
+    { "Types": ["PERFORM_ACTIVITY", "INTERACT"],
+      "Keywords": ["ride", "clean", "fix", "swap", "cut it loose", "hang the", "repaint", "set up the", "tend", "load",
+        "restock", "stock", "work the", "work your", "work detail", "finish your", "put up", "pull up", "pose",
+        "put it on", "pay the", "hide the", "evict", "toast", "open for business", "reopen", "wait", "close out",
+        "keep the table"],
+      "Params": { "Gameplay": "Timing" } },
+
+    { "Types": ["PERFORM_ACTIVITY", "INTERACT"],
+      "Keywords": ["perform", "anthem", "crowd", "lights", "dance", "band", "own it"],
+      "Params": { "Gameplay": "Rhythm" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["manage the", "redirect"],
+      "Params": { "Gameplay": "Defend", "bPeaceful": true, "Seconds": 30, "Label": "Line-cutter", "StartMode": "Proximity" } },
+
+    { "Types": ["INTERACT"], "Keywords": ["hand out", "sell", "serve your", "customers"],
+      "Params": { "Gameplay": "Persuade" } },
+
+    { "Types": ["INTERACT", "GO_TO_LOCATION"], "Keywords": ["find", "look closer"],
+      "Params": { "Gameplay": "Search", "StartMode": "Proximity", "Count": 1 } },
+
+    { "Types": ["TAKE_PHOTO"], "Keywords": ["spots", "locations", "scout"],
+      "Params": { "Subject": "Spot" } },
+
+    { "Types": ["RECORD_VIDEO"], "Keywords": ["livestream", "live", "stream", "goes live"],
+      "Params": { "bLive": true } },
+
+    { "Types": ["DEFEND"], "Keywords": ["peaceful", "calm", "line"],
+      "Params": { "bPeaceful": true } },
+
+    { "Types": ["ESCAPE"], "Keywords": ["responders", "police"],
+      "Params": { "Role": "Police", "Heat": 3 } },
+
+    { "Types": ["ESCAPE"], "Keywords": ["security"],
+      "Params": { "Role": "Security" } },
+
+    { "Types": ["ESCAPE"], "Keywords": ["scooters", "the tail"],
+      "Params": { "bVehicle": true } },
+
+    { "Types": ["ESCAPE"], "Keywords": ["men in suits", "coming after", "get haze out", "alive"],
+      "Params": { "Role": "Enforcer" } },
+
+    { "Types": ["ESCAPE"], "Keywords": ["followed you"],
+      "Params": { "Role": "Pedestrian", "Count": 5 } },
+
+    { "Types": ["DELIVER_ITEM"], "Keywords": ["gently", "white gloves", "hope nobody"],
+      "Params": { "bFragile": true } },
+
+    { "Types": ["GO_TO_LOCATION"], "Keywords": ["lay low"],
+      "Params": { "Gameplay": "LoseHeat", "Heat": 2 } },
+
+    { "Types": ["GO_TO_LOCATION"], "Keywords": ["drive"],
+      "Params": { "bVehicle": true } }
+  ],
+
+  "Overrides": {
+    "M01_Detain":         { "Gameplay": "Approach", "StartMode": "Proximity", "Role": "Pedestrian", "Label": "Noticed" },
+    "M01_Cameras":        { "Gameplay": "Memory" },
+    "M01_Report":         { "Gameplay": "Memory" },
+    "M06_Calls":          { "Gameplay": "Reach", "StartMode": "Immediate", "Seconds": 40 },
+    "M05_Escort":         { "Gameplay": "Escort", "Count": 4 },
+    "UNL_BigAl_Chase":    { "Gameplay": "Chase", "bVehicle": true },
+    "H04_StreetFair":     { "Gameplay": "Delivery", "bFragile": true },
+    "BA01_Valet":         { "Gameplay": "Persuade", "StartMode": "Interact" },
+    "H10_Gate":           { "Gameplay": "Persuade", "StartMode": "Interact" },
+    "H03_Room4":          { "Gameplay": "Search", "StartMode": "Proximity", "Count": 1 },
+    "H02_BackRoom":       { "Gameplay": "Search", "StartMode": "Proximity", "Count": 2 },
+    "X20_Street":         { "Gameplay": "Combat", "Role": "Enforcer", "StartMode": "Immediate" },
+    "LC15_Protect":       { "Gameplay": "Defend", "Role": "Inmate", "Seconds": 30, "StartMode": "Proximity" },
+    "LC15_Meal":          { "Gameplay": "Stealth", "Role": "Inmate", "Label": "Tension", "StartMode": "Proximity" },
+    "LC15_Yard":          { "Gameplay": "Defend", "Role": "Inmate", "bPeaceful": true, "Seconds": 40 },
+    "LC14_FirstBlock":    { "Gameplay": "Timing" },
+    "LC17_LastBlock":     { "Gameplay": "Timing" },
+    "LC13_Hearing":       { "Gameplay": "Persuade" },
+    "LC13L_Landlord":     { "Gameplay": "Persuade" },
+    "LC03_Deliver":       { "Gameplay": "Delivery" },
+    "UNL_Jokes_Smoke":    { "Gameplay": "Reach", "Seconds": 20 },
+    "UNL_Swisher_Sell":   { "Gameplay": "Persuade" },
+    "L05_Site":           { "Gameplay": "Search", "StartMode": "Proximity", "Count": 2 },
+    "L08_Routes":         { "Gameplay": "Route", "bVehicle": true },
+    "L06_Paperwork":      { "Gameplay": "Memory" },
+    "X17_Staff":          { "Gameplay": "Persuade" },
+    "X09_Venue":          { "Gameplay": "Negotiate" },
+    "H09_VIPs":           { "Gameplay": "Escort", "bVehicle": false, "Count": 3 },
+    "X03_Chase":          { "Gameplay": "Escape", "bVehicle": true, "Role": "Pedestrian" },
+    "H01_RedPinstripeChange": { "Gameplay": "Timing" },
+    "X15_Content":        { "Gameplay": "Video" },
+    "B06_Stream":         { "Gameplay": "Video", "bLive": true, "bPeaceful": true },
+    "D01_Listen":         { "Gameplay": "Stealth", "Role": "Security", "Label": "Detection" },
+    "X02_Pitches":        { "Gameplay": "Conversation" },
+    "T02_Calls":          { "Gameplay": "Persuade" },
+    "UNL_Lato_Report":    { "Gameplay": "Conversation" },
+    "X06_Crowd":          { "Gameplay": "Defend", "bPeaceful": true, "Seconds": 30, "Label": "Angry customer" },
+    "CUS_LightsOut":      { "Gameplay": "Hold" },
+    "B04_Heckler":        { "Gameplay": "Persuade" },
+    "B04_Seagull":        { "Gameplay": "Chase", "Label": "Seagull" },
+    "B03_Clip":           { "Gameplay": "Hold" },
+    "LC13_Detectives":    { "Gameplay": "Hold" },
+    "PH_DANCE_Offer":     { "Gameplay": "Hold" },
+    "PH_ENC_Offer":       { "Gameplay": "Hold" }
+  }
+}

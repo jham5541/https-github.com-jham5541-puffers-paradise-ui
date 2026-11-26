@@ -1,0 +1,902 @@
+[
+  {
+    "Flag": "Mac_Overreacted",
+    "Missions": [
+      "M02"
+    ],
+    "Objective": "None",
+    "Speaker": "Supervisor",
+    "Line": "Word of advice: no tackling tonight. The kid's mom still calls.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Mac_GoodInstinct",
+    "Missions": [
+      "M02"
+    ],
+    "Objective": "None",
+    "Speaker": "Supervisor",
+    "Line": "You caught the tag-switcher. Fine. Don't let it go to your head.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Mac_Overreacted",
+    "Missions": [
+      "M02"
+    ],
+    "Objective": "M02_Dre",
+    "Speaker": "Dre",
+    "Line": "You're the guy who tackled a kid over homework. I'm not saying nothing.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Mac_GoodInstinct",
+    "Missions": [
+      "M02"
+    ],
+    "Objective": "M02_Dre",
+    "Speaker": "Dre",
+    "Line": "Heard you got the price-tag guy. Okay, okay. I'll talk.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Mac_Report_Vanessa",
+    "Missions": [
+      "M03"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "Your last report quoted a mannequin. Twice.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Mac_Report_Factual",
+    "Missions": [
+      "M03"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "Solid report last time. Don't make me regret saying that.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Dre_OwesMac",
+    "Missions": [
+      "M03"
+    ],
+    "Objective": "None",
+    "Speaker": "Dre",
+    "Line": "I owe you one. Text me if you need eyes on the cameras.",
+    "DifficultyDelta": -0.1
+  },
+  {
+    "Flag": "Mac_Ego",
+    "Missions": [
+      "M04"
+    ],
+    "Objective": "None",
+    "Speaker": "Teen",
+    "Line": "That's the guy who stole our credit. Run!",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Mac_Humbled",
+    "Missions": [
+      "M04"
+    ],
+    "Objective": "None",
+    "Speaker": "Teen",
+    "Line": "Yo, it's Mac. He's cool. The runner went that way.",
+    "DifficultyDelta": -0.1
+  },
+  {
+    "Flag": "Mac_Overreacted",
+    "Missions": [
+      "M04"
+    ],
+    "Objective": "M04_TalkDown",
+    "Speaker": "Shoplifter",
+    "Line": "You're the tackle guy. I'm not going back with you.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Mac_Composed",
+    "Missions": [
+      "M05"
+    ],
+    "Objective": "M05_Brief",
+    "Speaker": "Supervisor",
+    "Line": "You kept your head with the shoplifter. That's why you're on the signing.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Mac_Tackle",
+    "Missions": [
+      "M05"
+    ],
+    "Objective": "None",
+    "Speaker": "Supervisor",
+    "Line": "Celebrity's people asked one thing: no tackling.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Mac_Sabotaged",
+    "Missions": [
+      "M07"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "SecuriCorp says their drone 'malfunctioned.' Nobody believes you now.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Mac_Won_Fair",
+    "Missions": [
+      "M07"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "You beat SecuriCorp clean. Still don't believe you about this one.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Mac_Trusts_Crew",
+    "Missions": [
+      "X16"
+    ],
+    "Objective": "None",
+    "Speaker": "Blockie",
+    "Line": "Mac called us when it mattered. Now he runs the door.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Mac_Called_Cops",
+    "Missions": [
+      "X16"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "The police know Mac's name now. That cuts both ways around here.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Kush_TrustsHaze",
+    "Missions": [
+      "K01"
+    ],
+    "Objective": "None",
+    "Speaker": "Kush Williams",
+    "Line": "You told me the truth once. So I'm asking you first.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Kush_SuspectsLato",
+    "Missions": [
+      "K01"
+    ],
+    "Objective": "None",
+    "Speaker": "Kush Williams",
+    "Line": "If this is one of Lato's stories, I swear to God.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Kush_SuspectsLato",
+    "Missions": [
+      "K01"
+    ],
+    "Objective": "K01_Thief",
+    "Speaker": "Kush Williams",
+    "Line": "And it better not be Lato.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_HasRezoningTape",
+    "Missions": [
+      "D01"
+    ],
+    "Objective": "None",
+    "Speaker": "Dank Washington",
+    "Line": "You still got that council tape? Hold onto it.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_Peeked",
+    "Missions": [
+      "H05"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "Somebody opened the figure box. Scanner says it was you.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Haze_Professional",
+    "Missions": [
+      "H05"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "Clean delivery on that figure. Don't make it weird.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_TalkedCops",
+    "Missions": [
+      "H07"
+    ],
+    "Objective": "H07_Lawyer",
+    "Speaker": "Lawyer",
+    "Line": "The desk sergeant says you're 'charming.' That's on file now.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Doobie_FederalVoice",
+    "Missions": [
+      "H07"
+    ],
+    "Objective": "None",
+    "Speaker": "Doobie",
+    "Line": "Still got the federal voice warmed up if you need it.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Haze_BoardMeeting",
+    "Missions": [
+      "H07"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "The board you interrupted at Heights Tower filed a complaint. Signature required on everything now.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Haze_ByTheBook",
+    "Missions": [
+      "H08"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "By the book on that parcel. That's the kind of courier I need today.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Haze_Parcel_Lawyer",
+    "Missions": [
+      "H08"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "The lawyer tipped big. The ex left a review. Guess which one I read.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Kush_Owes_Haze",
+    "Missions": [
+      "LC06"
+    ],
+    "Objective": "None",
+    "Speaker": "Kush Williams",
+    "Line": "Haze got my costume back. Anyone with him is with me.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_Premium",
+    "Missions": [
+      "X18"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "Premium courier Haze is too fancy for scavenger hunts now?",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_Loyal",
+    "Missions": [
+      "X18"
+    ],
+    "Objective": "None",
+    "Speaker": "Manager",
+    "Line": "Take the day. You earned it staying with us.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_Generous",
+    "Missions": [
+      "X19"
+    ],
+    "Objective": "None",
+    "Speaker": "Kid",
+    "Line": "That's the guy who gave me the gold figure! He's helping!",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Haze_Grail",
+    "Missions": [
+      "X19"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "The gold figure's in a vault. The insulin isn't. Go.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Lato_Price_Premium",
+    "Missions": [
+      "L02"
+    ],
+    "Objective": "None",
+    "Speaker": "Pastor Odell",
+    "Line": "The man with the premium prices. Lord, give me patience.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Lato_Price_Fair",
+    "Missions": [
+      "L02"
+    ],
+    "Objective": "None",
+    "Speaker": "Pastor Odell",
+    "Line": "My nephew says you're fair. We'll see.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Lato_Church_Banned",
+    "Missions": [
+      "L05"
+    ],
+    "Objective": "None",
+    "Speaker": "Doobie",
+    "Line": "The church posted your face on the bulletin board. Get the permit.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Lato_Church_Friend",
+    "Missions": [
+      "L05"
+    ],
+    "Objective": "None",
+    "Speaker": "Pastor Odell",
+    "Line": "Brunch was lovely. I'll send some folks to your pop-up.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "L04_Source_Rival",
+    "Missions": [
+      "L05"
+    ],
+    "Objective": "None",
+    "Speaker": "Lato",
+    "Line": "Margins are thin. The rival's markup is killing us.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "L04_Source_BigAl",
+    "Missions": [
+      "BA01"
+    ],
+    "Objective": "None",
+    "Speaker": "Big Al",
+    "Line": "You came to me for a supplier. Now I come to you.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Lato_Merch_Bribe",
+    "Missions": [
+      "L06"
+    ],
+    "Objective": "None",
+    "Speaker": "Doobie",
+    "Line": "An inspector took free merch from you. That's in my notes.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Lato_Permit",
+    "Missions": [
+      "L06"
+    ],
+    "Objective": "None",
+    "Speaker": "Doobie",
+    "Line": "The permit worked. Now read every page of this lease.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "L06_Funded_BigAl",
+    "Missions": [
+      "BA02"
+    ],
+    "Objective": "None",
+    "Speaker": "Big Al",
+    "Line": "You took my money once. Now let's talk about real money.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Lato_Scrutiny",
+    "Missions": [
+      "L07"
+    ],
+    "Objective": "None",
+    "Speaker": "Brenda",
+    "Line": "After that livestream, the brand needs to look legit. Fast.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Lato_Rep_Recovered",
+    "Missions": [
+      "L07"
+    ],
+    "Objective": "None",
+    "Speaker": "Brenda",
+    "Line": "The correction worked. People are curious about the store now.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Lato_Customer_Kept",
+    "Missions": [
+      "L04"
+    ],
+    "Objective": "None",
+    "Speaker": "Lato",
+    "Line": "The 'wellness subscription' lady is my best customer. Do not let the shelves run dry.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Sowa_Deal_Ownership",
+    "Missions": [
+      "X08"
+    ],
+    "Objective": "None",
+    "Speaker": "Master Sowa",
+    "Line": "Lato owns half. Lato does dishes too. Number one, okay.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Sowa_Deal_None",
+    "Missions": [
+      "X08"
+    ],
+    "Objective": "None",
+    "Speaker": "Master Sowa",
+    "Line": "Sowa does not need business partner. Sowa needs win.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Lato_Investors",
+    "Missions": [
+      "L08"
+    ],
+    "Objective": "None",
+    "Speaker": "Investor",
+    "Line": "We own thirty percent. We'd like to see territory growth.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Lato_Loan",
+    "Missions": [
+      "L08"
+    ],
+    "Objective": "None",
+    "Speaker": "Lato",
+    "Line": "Loan payment's due. Whoever is working my map is costing me.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Lato_NoInvestors",
+    "Missions": [
+      "L08"
+    ],
+    "Objective": "None",
+    "Speaker": "Lato",
+    "Line": "No investors, no excuses. Just me and the map.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Bria_Brand_Chaos",
+    "Missions": [
+      "B02"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "The blooper cut did numbers. The sponsor wants 'that energy,' controlled.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Bria_Brand_Clean",
+    "Missions": [
+      "B02"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "Clean edit landed us a sponsor. Don't mess this up, Brenda.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "B02_Extras_Upset",
+    "Missions": [
+      "X03"
+    ],
+    "Objective": "None",
+    "Speaker": "Cream Cake",
+    "Line": "You made my panic attack a meme. Now I'm being followed. Thanks.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "B02_Extras_Happy",
+    "Missions": [
+      "X03"
+    ],
+    "Objective": "None",
+    "Speaker": "Cream Cake",
+    "Line": "You made me look good in that promo. I owe you a cone.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Brenda_LeanedIn",
+    "Missions": [
+      "B04"
+    ],
+    "Objective": "None",
+    "Speaker": "Sponsor",
+    "Line": "We've seen the merch. No Brenda. In writing.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Brenda_Apologized",
+    "Missions": [
+      "B04"
+    ],
+    "Objective": "None",
+    "Speaker": "Sponsor",
+    "Line": "The apology helped. Brenda can be in the background.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Bria_Contract_Signed",
+    "Missions": [
+      "B05"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "The contract says the house collab is mandatory. So here we are.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Bria_Independent",
+    "Missions": [
+      "B05"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "No contract, no rules. The house can deal.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "B05_Exposed",
+    "Missions": [
+      "B06"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "After the saboteur live, everyone's watching. Every stream counts.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Bria_Sensational",
+    "Missions": [
+      "B07"
+    ],
+    "Objective": "None",
+    "Speaker": "Brenda",
+    "Line": "After 'terror geyser,' nobody believes our footage. That's the problem.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Bria_Credible",
+    "Missions": [
+      "B07"
+    ],
+    "Objective": "None",
+    "Speaker": "Brenda",
+    "Line": "People trust our footage now. That's why the fake clip hurts.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Bria_Spot_Tower",
+    "Missions": [
+      "X18"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "First clue's near the water tower. Kidding. Maybe.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Club_Priority_Security",
+    "Missions": [
+      "M05"
+    ],
+    "Objective": "None",
+    "Speaker": "Mac",
+    "Line": "Since the club put security first, I've got a radio that works.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Club_Priority_Stage",
+    "Missions": [
+      "B04"
+    ],
+    "Objective": "None",
+    "Speaker": "Bria",
+    "Line": "The club stage is fixed. Good, because this sponsor isn't.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Janet_Feared",
+    "Missions": [
+      "X07"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You ruled with an iron fist. So you can make Terp apologize.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Janet_Respect",
+    "Missions": [
+      "X07"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You were fair with my block. Be fair now.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Terp_Sensational",
+    "Missions": [
+      "X07"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "Terp made up a riot last year. Now he's making up our parking.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Terp_Credible",
+    "Missions": [
+      "T02"
+    ],
+    "Objective": "None",
+    "Speaker": "Terp",
+    "Line": "I called the sneaker drop straight. Let's see if the callers remember that.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Terp_Sensational",
+    "Missions": [
+      "T02"
+    ],
+    "Objective": "None",
+    "Speaker": "Terp",
+    "Line": "Callers still mad about the 'riot.' Here we go.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Dank_Tipped_Terp",
+    "Missions": [
+      "X14"
+    ],
+    "Objective": "None",
+    "Speaker": "Terp",
+    "Line": "Dank tipped me about the developer months ago. I've got receipts.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Dank_Leverage",
+    "Missions": [
+      "X14"
+    ],
+    "Objective": "None",
+    "Speaker": "Dank Washington",
+    "Line": "I sat on that developer secret. Time to use it.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Gala_Corporate",
+    "Missions": [
+      "X10"
+    ],
+    "Objective": "None",
+    "Speaker": "Blockie",
+    "Line": "The corporate sponsor wants a 'moment.' They're getting one.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Gala_Sponsor_Burned",
+    "Missions": [
+      "X13"
+    ],
+    "Objective": "None",
+    "Speaker": "Corporate",
+    "Line": "We remember the gala. Our offer reflects that.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Gala_Legend",
+    "Missions": [
+      "X13"
+    ],
+    "Objective": "None",
+    "Speaker": "Blockie",
+    "Line": "After that gala, everybody wants the club. Everybody.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Club_NeighborsAngry",
+    "Missions": [
+      "X16"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You ignored the neighbors. They're in the front row tonight.",
+    "DifficultyDelta": 0.15
+  },
+  {
+    "Flag": "Club_LocalHires",
+    "Missions": [
+      "X16"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "Half the staff is from the block. That should help tonight.",
+    "DifficultyDelta": -0.1
+  },
+  {
+    "Flag": "Block_Sold_Out",
+    "Missions": [
+      "X16"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You took the developer's money. Don't expect a warm room.",
+    "DifficultyDelta": 0.15
+  },
+  {
+    "Flag": "Block_Protected",
+    "Missions": [
+      "X16"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You stood with the tenants. They'll hear you out.",
+    "DifficultyDelta": -0.1
+  },
+  {
+    "Flag": "Mac_Peacekeeper",
+    "Missions": [
+      "X19"
+    ],
+    "Objective": "None",
+    "Speaker": "Mac",
+    "Line": "Kept the community meeting calm. I can keep a mall calm.",
+    "DifficultyDelta": -0.05
+  },
+  {
+    "Flag": "Mac_Heavy",
+    "Missions": [
+      "X19"
+    ],
+    "Objective": "None",
+    "Speaker": "Mac",
+    "Line": "Last time I threw everybody out. Gonna try talking first.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Blackout_Block",
+    "Missions": [
+      "X20"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You powered the block in the blackout. We're with you.",
+    "DifficultyDelta": -0.1
+  },
+  {
+    "Flag": "Blackout_Club",
+    "Missions": [
+      "X20"
+    ],
+    "Objective": "None",
+    "Speaker": "Janet Greene",
+    "Line": "You powered the club. The block noticed.",
+    "DifficultyDelta": 0.05
+  },
+  {
+    "Flag": "Offer_BigAl",
+    "Missions": [
+      "X20"
+    ],
+    "Objective": "None",
+    "Speaker": "Big Al",
+    "Line": "I told you to partner with me. Let's handle this buyer.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Takeover_Street",
+    "Missions": [
+      "X21"
+    ],
+    "Objective": "None",
+    "Speaker": "Blockie",
+    "Line": "We won in the street. Now we decide what that makes us.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Takeover_Legal",
+    "Missions": [
+      "X21"
+    ],
+    "Objective": "None",
+    "Speaker": "Blockie",
+    "Line": "We won it in court. Clean. Let's keep it clean.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Sowa_RiggedWin",
+    "Missions": [
+      "S02"
+    ],
+    "Objective": "None",
+    "Speaker": "Master Sowa",
+    "Line": "Rival chef called the health inspector. Revenge for judges.",
+    "DifficultyDelta": 0.1
+  },
+  {
+    "Flag": "Sowa_FairWin",
+    "Missions": [
+      "S02"
+    ],
+    "Objective": "None",
+    "Speaker": "Master Sowa",
+    "Line": "Sowa won fair. Inspector still coming. Hide whisk.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Swisher_Reinvested",
+    "Missions": [
+      "UNLOCK_Swisher"
+    ],
+    "Objective": "None",
+    "Speaker": "Swisher",
+    "Line": "Remember the reinvest? This is the play it paid for.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Munchie_Famous",
+    "Missions": [
+      "T02"
+    ],
+    "Objective": "None",
+    "Speaker": "Terp",
+    "Line": "Line three: Pigeon Pot Pie Guy wants to say hi.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "CC_Critic_Wrecked",
+    "Missions": [
+      "X12"
+    ],
+    "Objective": "None",
+    "Speaker": "Cream Cake",
+    "Line": "The critic who ate the special still calls me at night.",
+    "DifficultyDelta": 0.0
+  },
+  {
+    "Flag": "Sowa_Pigeon_Delivered",
+    "Missions": [
+      "S02"
+    ],
+    "Objective": "None",
+    "Speaker": "Master Sowa",
+    "Line": "The pet pigeon is... in the kitchen. Hide it.",
+    "DifficultyDelta": 0.05
+  }
+]
