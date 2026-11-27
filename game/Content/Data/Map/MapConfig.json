@@ -1,0 +1,100 @@
+{
+  "_doc": "World map settings. See Docs/WorldMap.md. Colors are #RRGGBB or #RRGGBBAA. Edit and run puffers.Map.Reload.",
+  "worldSizeM": [22000, 16000],
+  "worldOriginOnMapM": [10000, 8000],
+  "worldYawDeg": 0,
+
+  "zoom": { "min": 0.03, "max": 6.0, "default": 0.22, "minimap": 0.9 },
+
+  "survey": {
+    "_doc": "Rules are tested in order; the first whose 'match' is found (case-insensitive) in a ZoneGraph tag, actor name/tag/class or mesh name wins. Run puffers.Map.Survey and read the log for the tag names a level really uses.",
+    "zoneGraphTags": [
+      { "match": "Freeway", "class": "Highway" },
+      { "match": "Highway", "class": "Highway" },
+      { "match": "Crosswalk", "class": "Path" },
+      { "match": "Pedestrian", "class": "Path" },
+      { "match": "Sidewalk", "class": "Path" },
+      { "match": "Train", "class": "Rail" },
+      { "match": "Rail", "class": "Rail" },
+      { "match": "Parking", "class": "Alley" },
+      { "match": "Vehicle", "class": "Street" }
+    ],
+    "actors": [
+      { "match": "MapIgnore", "ignore": true },
+      { "match": "Highway", "class": "Highway" },
+      { "match": "Freeway", "class": "Highway" },
+      { "match": "Tunnel", "class": "Street", "flags": ["Tunnel"] },
+      { "match": "Bridge", "class": "Street", "flags": ["Bridge"] },
+      { "match": "Railway", "class": "Rail" },
+      { "match": "Rail", "class": "Rail" },
+      { "match": "Trail", "class": "Trail" },
+      { "match": "DirtRoad", "class": "Trail" },
+      { "match": "Footpath", "class": "Path" },
+      { "match": "Sidewalk", "class": "Path" },
+      { "match": "Path", "class": "Path" },
+      { "match": "Alley", "class": "Alley" },
+      { "match": "Road", "class": "Street" },
+      { "match": "Street", "class": "Street" },
+      { "match": "MapRoad", "class": "Street" }
+    ],
+    "meshes": [
+      { "match": "Sidewalk", "area": "Sidewalk" },
+      { "match": "Crosswalk", "area": "Sidewalk" },
+      { "match": "Road_", "area": "RoadSurface" },
+      { "match": "Street_", "area": "RoadSurface" },
+      { "match": "Plaza", "area": "Plaza" },
+      { "match": "Park_", "area": "Park" },
+      { "match": "Grass", "area": "Park" },
+      { "match": "Bldg", "area": "Building" },
+      { "match": "Building", "area": "Building" }
+    ],
+    "sampleStepM": 10,
+    "bridgeDropM": 5,
+    "tunnelCoverM": 14,
+    "minStructureLengthM": 25,
+    "sweepCellM": 400,
+    "sweepWaitSeconds": 2.5
+  },
+
+  "satellite": { "tileM": 500, "tilePx": 1024, "jpegQuality": 88 },
+
+  "online": {
+    "_doc": "Servers sync player builds with the backend. PUFFERS_BACKEND_URL overrides backendUrl; PUFFERS_SERVER_KEY must match the backend's MAP_SERVER_KEY.",
+    "backendUrl": "",
+    "pollSeconds": 5
+  },
+
+  "style": {
+    "sea": "#071521",
+    "seaGlow": "#0E2738",
+    "land": "#1F262E",
+    "water": "#0F2E44",
+    "park": "#1D3825",
+    "roadSurface": "#4A4F57",
+    "sidewalk": "#363A40",
+    "buildingFill": "#2B3038",
+    "buildingEdge": "#454C57",
+    "lotZone": "#FFFFFF14",
+    "label": "#EDF1F5",
+    "accent": "#FFD23F",
+    "route": "#C77DFF",
+    "panel": "#080D12D1",
+    "bridgeCasing": "#05060A",
+    "tunnelAlpha": 0.45,
+    "counties": { "central": "#E9A23B", "heights": "#5B8FC7", "southside": "#D9734E", "frontier": "#A781C9", "coast": "#3FB892" },
+    "countyLand": { "central": "#3A3226", "heights": "#25303D", "southside": "#3A2A25", "frontier": "#33293D", "coast": "#213830" },
+    "uses": { "Home": "#FFC94A", "Shop": "#45C6EC", "Venue": "#C77DFF", "Attraction": "#FF7AB6", "Grow": "#7ED957" },
+    "icons": { "prison": "#FF5A4F", "jail": "#FF8A80", "disp": "#7ED957", "lounge": "#C77DFF", "shop": "#45C6EC", "home": "#FFC94A", "transit": "#FFC94A", "start": "#FFD23F" },
+    "roads": {
+      "Highway":  { "fill": "#FFC94A", "casing": "#1A1406", "minPx": 2.6, "maxPx": 40, "minZoom": 0 },
+      "Arterial": { "fill": "#F2F4F7", "casing": "#0E1217", "minPx": 1.8, "maxPx": 32, "minZoom": 0.04 },
+      "Street":   { "fill": "#D5DAE0", "casing": "#0E1217", "minPx": 1.2, "maxPx": 26, "minZoom": 0.12 },
+      "Alley":    { "fill": "#A9B0B8", "casing": "#0E1217", "minPx": 0.8, "maxPx": 16, "minZoom": 0.5 },
+      "Path":     { "fill": "#8E97A3B0", "casing": "#00000000", "minPx": 0.6, "maxPx": 10, "minZoom": 0.9 },
+      "Trail":    { "fill": "#C9A876", "casing": "#2A2015", "minPx": 0.9, "maxPx": 12, "minZoom": 0.08 },
+      "Rail":     { "fill": "#9AA3AE", "casing": "#1B2026", "minPx": 1.0, "maxPx": 10, "minZoom": 0.05 },
+      "Ferry":    { "fill": "#FFC94ACC", "casing": "#00000000", "minPx": 1.2, "maxPx": 4, "minZoom": 0 },
+      "Planned":  { "fill": "#FFC94A", "casing": "#1A1406", "minPx": 2.2, "maxPx": 30, "minZoom": 0 }
+    }
+  }
+}

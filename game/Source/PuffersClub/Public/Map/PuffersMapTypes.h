@@ -51,16 +51,17 @@ namespace EPuffersRoadFlags
 UENUM(BlueprintType)
 enum class EPuffersMapAreaKind : uint8
 {
+	// Draw order follows this list (lower first).
 	Land,
-	Water,
 	County,
+	Park,
+	Water,
 	District,
 	LotZone,
-	Park,
 	RoadSurface,
 	Sidewalk,
-	Building,
 	Plaza,
+	Building,
 	MAX UMETA(Hidden)
 };
 
