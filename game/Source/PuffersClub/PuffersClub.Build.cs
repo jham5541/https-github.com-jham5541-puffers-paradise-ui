@@ -27,7 +27,14 @@ public class PuffersClub : ModuleRules
 			"Slate",
 			"SlateCore",
 			"Json",
-			"JsonUtilities"
+			"JsonUtilities",
+			"UMG",
+			"HTTP",
+			"RHI",
+			"RenderCore",
+			"ImageCore",
+			"ZoneGraph",
+			"Landscape"
 		});
 	}
 }

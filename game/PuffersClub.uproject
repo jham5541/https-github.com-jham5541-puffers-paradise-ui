@@ -22,6 +22,7 @@
 		{ "Name": "MassEntity", "Enabled": true },
 		{ "Name": "MassGameplay", "Enabled": true },
 		{ "Name": "MassAI", "Enabled": true },
+		{ "Name": "ZoneGraph", "Enabled": true },
 		{ "Name": "Metasound", "Enabled": true },
 		{ "Name": "ReplicationGraph", "Enabled": true },
 		{ "Name": "OnlineSubsystemSteam", "Enabled": true },

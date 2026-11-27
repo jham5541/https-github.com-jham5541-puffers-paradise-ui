@@ -516,6 +516,9 @@ public:
 	// Called by the mission subsystem bindings (and tests) to run hooks.
 	void HandleEvent(FName EventName, FName Context);
 
+	// World map: the catalog listing for a plot (county, cells, build-zone lot).
+	const FPuffersPlotListing* GetPlotListing(FName PlotId) const { return FindPlotListing(PlotId); }
+
 private:
 	UFUNCTION()
 	void OnGameEvent(FName EventName, FName Context);

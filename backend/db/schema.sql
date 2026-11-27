@@ -115,3 +115,22 @@ CREATE TABLE vehicles (
 CREATE INDEX idx_transactions_occurred ON transactions (occurred_at);
 CREATE INDEX idx_characters_account ON characters (account_id);
 CREATE INDEX idx_buildings_parcel ON buildings (parcel_id);
+
+-- World map: player builds every player sees on the map. One row per build; seq orders changes so
+-- game servers can poll "everything since seq N". Footprint is map-space meters [x0,y0,x1,y1,...].
+CREATE SEQUENCE map_build_seq;
+CREATE TABLE map_builds (
+  build_id     TEXT PRIMARY KEY,
+  plot_id      TEXT NOT NULL DEFAULT '',
+  owner_id     TEXT NOT NULL,
+  owner_name   TEXT NOT NULL DEFAULT '',
+  use          TEXT NOT NULL DEFAULT '',
+  label        TEXT NOT NULL DEFAULT '',
+  state        TEXT NOT NULL DEFAULT 'Completed',
+  footprint    JSONB NOT NULL,
+  height_m     REAL NOT NULL DEFAULT 0,
+  version      INTEGER NOT NULL DEFAULT 1,
+  seq          BIGINT NOT NULL DEFAULT nextval('map_build_seq'),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX map_builds_seq ON map_builds (seq);

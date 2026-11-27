@@ -810,6 +810,8 @@ bool UPuffersCareerSubsystem::AddPlotBuilding(FName PlotId, FName BuildingId, FN
 		Existing->bCompleted = bCompleted;
 		Existing->Use = Use;
 		Existing->BuildVersion += 1;
+		SaveNow();
+		Publish(TEXT("PlotBuildingChanged"), PlotId);
 		return true;
 	}
 	if (Listing && Plot->Buildings.Num() >= Listing->MaxBuildings)
@@ -822,6 +824,7 @@ bool UPuffersCareerSubsystem::AddPlotBuilding(FName PlotId, FName BuildingId, FN
 	Building.Use = Use;
 	Building.bCompleted = bCompleted;
 	SaveNow();
+	Publish(TEXT("PlotBuildingChanged"), PlotId);
 	return true;
 }
 
