@@ -6,6 +6,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "JsonObjectConverter.h"
+#include "Engine/GameInstance.h"
 #include "Career/PuffersCareerSubsystem.h"
 #include "Career/PuffersCareerRules.h"
 #include "Career/PuffersCountyLawRules.h"
@@ -34,6 +35,7 @@ namespace PuffersCareerTests
 
 	struct FFixture
 	{
+		UGameInstance* Instance = nullptr;
 		UPuffersCareerSubsystem* Career = nullptr;
 		FDateTime Clock = FDateTime(2027, 1, 4, 12, 0, 0);
 		int64 Wallet = 0;
@@ -56,8 +58,10 @@ namespace PuffersCareerTests
 			bLoaded &= LoadData(TEXT("Hooks.json"), Hooks);
 			Tweak(*this);
 
-			Career = NewObject<UPuffersCareerSubsystem>(GetTransientPackage());
-			Career->AddToRoot();
+			// Subsystems must live inside a game instance.
+			Instance = NewObject<UGameInstance>(GetTransientPackage());
+			Instance->AddToRoot();
+			Career = NewObject<UPuffersCareerSubsystem>(Instance);
 			Career->Now = [this]() { return Clock; };
 			Career->GetWalletCash = [this]() { return Wallet; };
 			Career->AddWalletCash = [this](int64 Delta) { Wallet += Delta; };
@@ -68,7 +72,7 @@ namespace PuffersCareerTests
 
 		~FFixture()
 		{
-			Career->RemoveFromRoot();
+			Instance->RemoveFromRoot();
 		}
 
 		UPuffersCareerSaveGame* Save() const { return Career->GetSave(); }

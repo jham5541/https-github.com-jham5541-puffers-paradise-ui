@@ -276,6 +276,7 @@ void FPuffersHousingRules::SettleAsBuilt(FPuffersPlotOwnership& Plot, FName Buye
 		OutMovableItems.Append(Building.MovableItems);
 		Building.MovableItems.Reset();
 	}
+	Plot.OwnerId = BuyerId;
 	for (FPuffersPlayerLease& Lease : Plot.Leases)
 	{
 		if (Lease.bActive)

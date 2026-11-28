@@ -707,6 +707,10 @@ FName UPuffersCareerSubsystem::StartOperation(FName OpId, FName ArchetypeId, FNa
 		{
 			Publish(EventRouteCommitted, TEXT("Street"));
 			Notify(TEXT("You're committed to the street for this career. Licensed shops stay possible until a confirmed street bust."));
+			if (Save->Owner.Licenses.ContainsByPredicate([](const FPuffersLicense& L) { return L.State == EPuffersLicenseState::Active; }))
+			{
+				Milestone(EPuffersFirstBuildMilestone::DualOperation);
+			}
 		}
 		Milestone(EPuffersFirstBuildMilestone::StreetOwnership);
 	}

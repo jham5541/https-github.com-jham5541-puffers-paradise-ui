@@ -674,8 +674,11 @@ FName UPuffersCareerSubsystem::ApplyForVacancy(FName UnitId, FName ArchetypeId, 
 		bCanLicense, Save->Housing.Applications, Config.VacancyReservationHours, Now());
 	OutWhy = Application.Reason;
 	Notify(FString::Printf(TEXT("Application for %s: %s"), *Vacancy->Building, *Application.Reason));
+	// A refused application stays on file with its reason, but the caller only gets an id for an approved one.
+	const bool bApproved = Application.State == EPuffersApplicationState::Approved;
+	const FName ApplicationId = Application.ApplicationId;
 	SaveNow();
-	return Application.ApplicationId;
+	return bApproved ? ApplicationId : NAME_None;
 }
 
 FName UPuffersCareerSubsystem::TakePossession(FName ApplicationId, FString& OutWhy)
