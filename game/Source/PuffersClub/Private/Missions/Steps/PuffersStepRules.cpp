@@ -284,17 +284,30 @@ FName FPuffersStepRules::FindNamedCharacter(const FString& Description, const TA
 {
 	int32 BestAt = MAX_int32;
 	FName Best = NAME_None;
-	const FString Compact = Description.Replace(TEXT(" "), TEXT(""));
+	// Ids are compact ("CreamCake", "BigAl"); descriptions use spaces, so search a compacted copy,
+	// but check word boundaries in the original text (otherwise the next word glues on: "BigAltells").
+	FString Compact;
+	TArray<int32> SourceIndex;
+	Compact.Reserve(Description.Len());
+	SourceIndex.Reserve(Description.Len());
+	for (int32 I = 0; I < Description.Len(); ++I)
+	{
+		if (Description[I] != TEXT(' '))
+		{
+			Compact.AppendChar(Description[I]);
+			SourceIndex.Add(I);
+		}
+	}
 	for (const FName& Character : KnownCharacters)
 	{
 		const FString Name = Character.ToString();
-		// Ids are compact ("CreamCake", "BigAl"); descriptions use spaces, so search the compacted text.
-		int32 At = Compact.Find(Name, ESearchCase::IgnoreCase);
+		int32 At = Name.IsEmpty() ? INDEX_NONE : Compact.Find(Name, ESearchCase::IgnoreCase);
 		while (At != INDEX_NONE)
 		{
-			const bool bStart = At == 0 || !FChar::IsAlpha(Compact[At - 1]);
-			const int32 End = At + Name.Len();
-			const bool bEnd = End >= Compact.Len() || !FChar::IsLower(Compact[End]);
+			const int32 First = SourceIndex[At];
+			const int32 After = SourceIndex[At + Name.Len() - 1] + 1;
+			const bool bStart = First == 0 || !FChar::IsAlpha(Description[First - 1]);
+			const bool bEnd = After >= Description.Len() || !FChar::IsLower(Description[After]);
 			if (bStart && bEnd)
 			{
 				break;
