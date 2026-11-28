@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Puffington Live Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600&display=swap">
+<style>
+/* A game screen, so one dark theme on purpose. Colors match Content/Data/Map/MapConfig.json "style". */
+:root{--sea:#071521;--panel:rgba(8,13,18,.84);--line:rgba(255,255,255,.09);--ink:#EDF1F5;--muted:#9AA6B2;--accent:#FFD23F;
+--live:#FF4D4D;--route:#C77DFF;--display:"Chakra Petch",system-ui,sans-serif;--body:Inter,system-ui,sans-serif;color-scheme:dark;
+--top:calc(12px + env(safe-area-inset-top,0px));--bot:calc(14px + env(safe-area-inset-bottom,0px));
+--l:max(16px,env(safe-area-inset-left,0px));--r:max(16px,env(safe-area-inset-right,0px))}
+html,body{height:100%;margin:0}
+body{background:var(--sea);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased}
+#sky{position:fixed;inset:0;background:linear-gradient(180deg,#0a1622 0%,#1b3247 45%,#3d5d78 70%,#7a8fa0 100%);opacity:0;transition:opacity 1.1s}
+body.is3d #sky{opacity:1}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#c.drag{cursor:grabbing}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lb{position:absolute;left:0;top:0;white-space:nowrap;will-change:transform;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.8)}
+.lb.county{font:700 15px var(--display);letter-spacing:.32em;text-transform:uppercase;opacity:.85}
+.lb.district{font:700 12px var(--display);letter-spacing:.2em;text-transform:uppercase;color:#dfe6ee}
+.lb.water{font:italic 600 12px var(--body);color:#7fb4d6;letter-spacing:.06em}
+.lb.place{font:600 11.5px var(--body);color:var(--ink);display:flex;align-items:center;gap:6px}
+.lb.place i{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(0,0,0,.6)}
+.lb.place.start i{width:12px;height:12px}
+.lb.road{font:600 10.5px var(--body);color:#e8edf2;background:rgba(10,14,19,.72);padding:1px 6px;border-radius:3px;text-shadow:none}
+.lb.build{font:600 10.5px var(--body);color:#111;background:var(--accent);padding:1px 6px;border-radius:3px;text-shadow:none}
+.panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#title{top:var(--top);left:var(--l);padding:10px 14px;max-width:min(380px,calc(100% - 32px - 150px))}
+#title h1{font:700 19px/1 var(--display);letter-spacing:.14em;color:var(--accent);margin:0 0 5px}
+#where{font-size:12px;opacity:.92;min-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#live{top:var(--top);right:var(--r);padding:8px 12px;font:600 12px var(--body);min-width:150px}
+#live .h{display:flex;gap:8px;align-items:center}
+#live .h i{width:8px;height:8px;border-radius:50%;background:var(--live);animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+#feed{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px;max-width:260px}
+#feed li{font:400 11px var(--body);color:var(--muted);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:fin .5s}
+#feed li b{color:var(--ink);font-weight:600}
+#feed li:hover{color:var(--ink)}
+@keyframes fin{from{opacity:0;transform:translateX(8px)}}
+#dock{left:50%;transform:translateX(-50%);bottom:var(--bot);display:flex;gap:8px;align-items:center;padding:6px}
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.06);border-radius:9px;padding:3px}
+.seg button{position:relative;z-index:1;font:700 14px var(--display);letter-spacing:.12em;color:var(--muted);background:none;border:0;padding:9px 18px;cursor:pointer;transition:color .3s}
+.seg button[aria-pressed=true]{color:#141006}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);background:var(--accent);border-radius:7px;transition:transform .55s cubic-bezier(.6,0,.2,1);box-shadow:0 2px 12px rgba(255,210,63,.35)}
+body.is3d .seg .thumb{transform:translateX(100%)}
+.ib{width:38px;height:38px;border-radius:9px;border:0;background:rgba(255,255,255,.06);color:var(--ink);font:700 17px var(--body);cursor:pointer;display:grid;place-items:center}
+.ib:hover,.seg button:hover{color:var(--ink)}
+.ib:hover{background:rgba(255,255,255,.12)}
+.ib svg{width:20px;height:20px}
+#compass svg{transition:transform .1s linear}
+#legend{left:var(--l);top:calc(var(--top) + 74px);padding:10px 12px;font-size:12px;display:grid;gap:5px;min-width:180px;max-height:calc(100% - 200px);overflow:auto}
+#legend[hidden]{display:none}
+#legend b{font:700 11px var(--display);letter-spacing:.14em;color:var(--accent);margin-top:4px}
+#legend div{display:flex;align-items:center;gap:9px}
+#legend .sw{width:24px;height:5px;border-radius:2px;flex:none}
+#legend .bx{width:14px;height:14px;border-radius:3px;flex:none}
+#legend .dot{width:10px;height:10px;border-radius:50%;flex:none}
+#info{left:var(--l);bottom:calc(var(--bot) + 64px);padding:9px 12px;font-size:11.5px;color:var(--muted);max-width:min(360px,calc(100% - 32px));line-height:1.45}
+#info b{color:var(--ink)}
+#info button{margin-top:6px;font:600 11.5px var(--body);color:#141006;background:var(--accent);border:0;border-radius:6px;padding:5px 10px;cursor:pointer}
+#info .x{float:right;background:none;color:var(--muted);padding:0 0 0 8px;margin:0;font-size:14px}
+#route{left:50%;transform:translateX(-50%);bottom:calc(var(--bot) + 62px);padding:7px 12px;font:600 12px var(--body);display:none;gap:10px;align-items:center}
+#route.on{display:flex}
+#route i{width:10px;height:10px;border-radius:50%;background:var(--route)}
+#route button{background:none;border:0;color:var(--muted);font-size:15px;cursor:pointer}
+#card{position:fixed;pointer-events:none;padding:8px 11px;font-size:12px;display:none;max-width:240px;line-height:1.4}
+#card b{display:block;font:700 12.5px var(--display);letter-spacing:.04em}
+#card span{color:var(--muted)}
+#toast{left:50%;top:calc(var(--top) + 10px);transform:translate(-50%,-6px);padding:8px 14px;font:600 12.5px var(--body);opacity:0;transition:.3s;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#hint{right:var(--r);bottom:var(--bot);padding:7px 10px;font-size:11px;color:var(--muted)}
+#drop{position:fixed;inset:0;display:none;place-items:center;background:rgba(7,21,33,.7);font:700 20px var(--display);letter-spacing:.1em;color:var(--accent);border:3px dashed var(--accent)}
+#drop.on{display:grid}
+#err{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:24px;color:var(--muted)}
+@media (max-width:720px){#hint{display:none}#live{min-width:0}#feed{display:none}#legend{top:auto;bottom:calc(var(--bot) + 64px)}
+#info{bottom:calc(var(--bot) + 64px)}.seg button{padding:9px 14px}#title{max-width:calc(100% - 32px - 120px)}}
+@media (prefers-reduced-motion:reduce){.seg .thumb,#sky{transition:none}}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<canvas id="c" aria-label="Puffington map"></canvas>
+<div id="labels"></div>
+<div id="title" class="panel"><h1>PUFFINGTON</h1><div id="where">Loading the city…</div></div>
+<div id="live" class="panel"><div class="h"><i></i><span id="count">LIVE</span></div><ul id="feed"></ul></div>
+<div id="legend" class="panel" hidden></div>
+<div id="info" class="panel"><button class="x" id="infoX" aria-label="Close">×</button>
+<b>Street detail here is a stand-in.</b> The core is generated in City Sample's style (lanes, sidewalks, crosswalks, the elevated loop, bridges and tunnels) so you can judge the look. In the game the map draws the real City Sample and environment roads after <b>puffers.Map.Survey</b> runs, and you can drop that pack here.<br>
+<button id="load">Load a surveyed map pack</button><input id="file" type="file" accept=".json,application/json" hidden></div>
+<div id="route" class="panel"><i></i><span id="routeTxt"></span><button id="routeX" aria-label="Clear waypoint">×</button></div>
+<div id="dock" class="panel">
+  <div class="seg" role="group" aria-label="Map view"><span class="thumb"></span><button id="b2d" aria-pressed="true">2D</button><button id="b3d" aria-pressed="false">3D</button></div>
+  <button class="ib" id="compass" title="North up (N)" aria-label="North up"><svg viewBox="0 0 24 24"><path d="M12 2l4 10h-8z" fill="#FF5A4F"/><path d="M12 22l-4-10h8z" fill="#9AA6B2"/></svg></button>
+  <button class="ib" id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+  <button class="ib" id="zout" title="Zoom out" aria-label="Zoom out">−</button>
+  <button class="ib" id="me" title="Follow me (F)" aria-label="Follow me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+  <button class="ib" id="leg" title="Legend (L)" aria-label="Legend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+</div>
+<div id="hint" class="panel">Drag to pan · Wheel to zoom · Right-click for a waypoint · Right-drag rotates in 3D · T switches 2D/3D</div>
+<div id="card" class="panel"></div>
+<div id="toast" class="panel"></div>
+<div id="drop">Drop a .mappack.json</div>
+<div id="err"></div>
+<script type="application/json" id="layout">{"format":"puffers-map-pack","version":1,"space":"map","source":"WorldLayout","generatedAt":"make_world_layout.py","roads":[{"id":"plan_Frontier_Hwy","name":"Frontier Hwy","class":"Planned","flags":[],"width":14,"dim":2,"pts":[7600.0,8100.0,7538.5,8081.6,7463.2,8060.0,7375.8,8035.2,7277.8,8007.4,7170.7,7976.9,7056.2,7943.8,6935.9,7908.2,6811.1,7870.4,6683.6,7830.5,6554.9,7788.7,6426.5,7745.1,6300.0,7700.0,6172.7,7651.5,6041.0,7598.4,5905.5,7541.4,5766.7,7481.5,5625.1,7419.5,5481.2,7356.3,5335.7,7292.7,5188.9,7229.6,5041.4,7168.0,4893.7,7108.6,4746.4,7052.3,4600.0,7000.0,4452.9,6950.7,4303.5,6902.8,4152.3,6856.2,4000.0,6811.1,3847.0,6767.4,3693.7,6725.0,3540.9,6684.0,3388.9,6644.4,3238.3,6606.2,3089.6,6569.4,2943.3,6534.0,2800.0,6500.0,2654.6,6467.0,2503.2,6435.0,2348.4,6403.9,2192.6,6374.1,2038.1,6345.6,1887.5,6318.8,1743.1,6293.6,1607.4,6270.4,1482.8,6249.2,1371.8,6230.3,1276.7,6213.9,1200.0,6200.0]},{"id":"plan_Hills_Pass","name":"Hills Pass","class":"Planned","flags":[],"width":14,"dim":2,"pts":[10600.0,5600.0,10649.0,5542.0,10711.1,5469.4,10784.4,5384.4,10866.7,5288.9,10955.9,5185.1,11050.0,5075.0,11146.9,4960.8,11244.4,4844.4,11340.6,4728.1,11433.3,4613.9,11520.5,4503.8,11600.0,4400.0,11674.9,4299.4,11749.5,4197.7,11823.4,4095.3,11896.3,3992.6,11967.8,3889.9,12037.5,3787.5,12105.2,3685.8,12170.4,3585.2,12232.8,3485.9,12292.1,3388.4,12348.0,3293.0,12400.0,3200.0,12448.6,3106.5,12494.4,3010.2,12537.5,2912.5,12577.8,2814.8,12615.3,2718.5,12650.0,2625.0,12681.9,2535.6,12711.1,2451.9,12737.5,2375.0,12761.1,2306.5,12781.9,2247.7,12800.0,2200.0]},{"id":"plan_Cabin_Rd","name":"Cabin Rd","class":"Planned","flags":[],"width":9,"dim":2,"pts":[8600.0,5600.0,8543.3,5524.0,8474.1,5430.6,8393.7,5321.9,8303.7,5200.0,8205.3,5067.0,8100.0,4925.0,7989.1,4776.0,7874.1,4622.2,7756.2,4465.6,7637.0,4308.3,7517.8,4152.4,7400.0,4000.0,7281.3,3844.2,7158.8,3678.2,7032.8,3504.7,6903.7,3325.9,6771.8,3144.4,6637.5,2962.5,6501.1,2782.7,6363.0,2607.4,6223.4,2439.1,6082.9,2280.1,5941.6,2132.9,5800.0,2000.0,5659.9,1879.1,5522.0,1766.2,5385.2,1660.9,5248.1,1563.0,5109.8,1471.9,4968.7,1387.5,4823.9,1309.3,4674.1,1237.0,4518.0,1170.3,4354.4,1108.8,4182.1,1052.1,4000.0,1000.0,3797.9,954.7,3570.8,918.1,3325.0,889.1,3066.7,866.7,2802.1,849.8,2537.5,837.5,2279.2,828.6,2033.3,822.2,1806.2,817.2,1604.2,812.5,1433.3,807.1,1300.0,800.0]},{"id":"plan_Coast_Hwy","name":"Coast Hwy","class":"Planned","flags":[],"width":14,"dim":2,"pts":[12400.0,6600.0,12458.3,6582.6,12531.7,6563.4,12618.0,6542.2,12714.8,6518.5,12820.0,6492.1,12931.2,6462.5,13046.3,6429.5,13163.0,6392.6,13278.9,6351.6,13391.9,6306.0,13499.7,6255.6,13600.0,6200.0,13695.8,6138.3,13791.4,6070.4,13886.7,5996.9,13981.5,5918.5,14075.5,5836.0,14168.8,5750.0,14260.9,5661.2,14351.9,5570.4,14441.4,5478.1,14529.4,5385.2,14615.7,5292.2,14700.0,5200.0,14784.2,5108.3,14869.7,5016.2,14955.5,4923.4,15040.7,4829.6,15124.6,4734.4,15206.2,4637.5,15284.8,4538.5,15359.3,4437.0,15428.9,4332.8,15492.8,4225.5,15550.1,4114.6,15600.0,4000.0,15642.4,3879.4,15678.5,3751.9,15708.6,3618.8,15733.3,3481.5,15753.2,3341.4,15768.7,3200.0,15780.5,3058.6,15788.9,2918.5,15794.5,2781.3,15797.9,2648.1,15799.6,2520.6,15800.0,2400.0,15796.7,2282.2,15787.5,2163.0,15773.4,2043.7,15755.6,1925.9,15734.9,1810.9,15712.5,1700.0,15689.4,1594.7,15666.7,1496.3,15645.3,1406.2,15626.4,1325.9,15610.9,1256.7,15600.0,1200.0]},{"id":"plan_Ocean_Dr","name":"Ocean Dr","class":"Planned","flags":[],"width":14,"dim":2,"pts":[12400.0,8600.0,12477.3,8590.3,12574.1,8578.2,12687.5,8564.1,12814.8,8548.1,12953.2,8530.8,13100.0,8512.5,13252.3,8493.5,13407.4,8474.1,13562.5,8454.7,13714.8,8435.6,13861.6,8417.3,14000.0,8400.0,14136.2,8379.2,14277.1,8351.6,14421.1,8319.5,14566.7,8285.2,14712.2,8250.8,14856.2,8218.8,14997.1,8191.2,15133.3,8170.4,15263.3,8158.6,15385.4,8158.1,15498.2,8171.2,15600.0,8200.0,15691.4,8244.2,15774.5,8301.2,15850.0,8369.5,15918.5,8448.1,15980.8,8535.8,16037.5,8631.2,16089.4,8733.3,16137.0,8840.7,16181.2,8952.3,16222.7,9066.9,16262.0,9183.2,16300.0,9300.0,16337.7,9422.6,16375.0,9555.6,16410.9,9696.9,16444.4,9844.4,16474.5,9996.2,16500.0,10150.0,16520.0,10303.8,16533.3,10455.6,16539.1,10603.1,16536.1,10744.4,16523.4,10877.4,16500.0,11000.0,16460.6,11116.2,16403.2,11230.8,16331.2,11343.0,16248.1,11451.9,16157.4,11556.6,16062.5,11656.2,15966.9,11750.0,15874.1,11837.0,15787.5,11916.4,15710.6,11987.3,15647.0,12048.8,15600.0,12100.0]},{"id":"plan_Southside_Ave","name":"Southside Ave","class":"Planned","flags":[],"width":9,"dim":2,"pts":[10000.0,10400.0,10004.5,10465.7,10009.7,10545.4,10015.6,10637.5,10022.2,10740.7,10029.5,10853.7,10037.5,10975.0,10046.2,11103.2,10055.6,11237.0,10065.6,11375.0,10076.4,11515.7,10087.8,11657.9,10100.0,11800.0,10113.8,11952.0,10129.9,12121.8,10147.7,12304.7,10166.7,12496.3,10186.4,12692.1,10206.2,12887.5,10225.8,13078.1,10244.4,13259.3,10261.7,13426.6,10277.1,13575.5,10290.0,13701.4,10300.0,13800.0]},{"id":"plan_Quarry_Rd","name":"Quarry Rd","class":"Planned","flags":[],"width":9,"dim":2,"pts":[8200.0,10400.0,8142.0,10478.6,8069.4,10578.7,7984.4,10696.9,7888.9,10829.6,7785.1,10973.5,7675.0,11125.0,7560.8,11280.7,7444.4,11437.0,7328.1,11590.6,7213.9,11738.0,7103.8,11875.6,7000.0,12000.0,6900.0,12115.6,6800.0,12228.9,6700.0,12339.8,6600.0,12448.1,6500.0,12553.7,6400.0,12656.2,6300.0,12755.7,6200.0,12851.9,6100.0,12944.5,6000.0,13033.6,5900.0,13118.8,5800.0,13200.0,5696.2,13278.1,5586.1,13353.7,5471.9,13426.6,5355.6,13496.3,5239.2,13562.6,5125.0,13625.0,5014.9,13683.3,4911.1,13737.0,4815.6,13785.9,4730.6,13829.6,4658.0,13867.8,4600.0,13900.0]},{"id":"plan_Old_Town_Rd","name":"Old Town Rd","class":"Planned","flags":[],"width":9,"dim":2,"pts":[7600.0,9400.0,7524.0,9422.8,7430.6,9456.2,7321.9,9497.7,7200.0,9544.4,7067.0,9594.0,6925.0,9643.8,6776.0,9691.1,6622.2,9733.3,6465.6,9768.0,6308.3,9792.4,6152.4,9803.9,6000.0,9800.0,5841.0,9778.0,5666.7,9738.9,5481.2,9685.9,5288.9,9622.2,5093.8,9550.9,4900.0,9475.0,4711.8,9397.7,4533.3,9322.2,4368.8,9251.6,4222.2,9188.9,4097.9,9137.3,4000.0,9100.0]},{"id":"plan_Desert_Rd","name":"Desert Rd","class":"Planned","flags":[],"width":9,"dim":2,"pts":[4600.0,7000.0,4561.3,6930.1,4513.0,6839.6,4456.2,6732.0,4392.6,6611.1,4323.4,6480.5,4250.0,6343.8,4173.8,6204.6,4096.3,6066.7,4018.8,5933.6,3942.6,5809.0,3869.2,5696.6,3800.0,5600.0,3737.2,5521.0,3680.6,5456.7,3628.1,5403.9,3577.8,5359.3,3527.4,5319.5,3475.0,5281.2,3418.4,5241.3,3355.6,5196.3,3284.4,5143.0,3202.8,5078.0,3108.7,4998.1,3000.0,4900.0,2869.0,4777.6,2713.0,4630.8,2537.5,4464.8,2348.1,4285.2,2150.5,4097.2,1950.0,3906.2,1752.3,3717.7,1563.0,3537.0,1387.5,3369.5,1231.5,3220.6,1100.5,3095.6,1000.0,3000.0]},{"id":"plan_Wastes_Rd","name":"Wastes Rd","class":"Planned","flags":[],"width":9,"dim":2,"pts":[12400.0,9800.0,12410.3,9866.1,12424.1,9946.5,12440.6,10039.8,12459.3,10144.4,12479.3,10258.8,12500.0,10381.2,12520.7,10510.3,12540.7,10644.4,12559.4,10782.0,12575.9,10921.5,12589.7,11061.4,12600.0,11200.0,12605.7,11343.4,12606.9,11497.0,12604.7,11658.6,12600.0,11825.9,12593.9,11996.7,12587.5,12168.7,12581.8,12339.7,12577.8,12507.4,12576.6,12669.5,12579.2,12823.8,12586.6,12968.1,12600.0,13100.0,12620.6,13223.2,12648.1,13342.4,12681.2,13457.0,12718.5,13566.7,12758.6,13670.7,12800.0,13768.8,12841.4,13860.2,12881.5,13944.4,12918.8,14021.1,12951.9,14089.6,12979.4,14149.4,13000.0,14200.0]},{"id":"plan_Key_Bridge","name":"Key Bridge","class":"Planned","flags":["Bridge"],"width":14,"dim":2,"pts":[16800.0,10100.0,16872.1,10094.8,16968.5,10088.0,17084.4,10079.7,17214.8,10070.4,17355.0,10060.4,17500.0,10050.0,17645.0,10039.6,17785.2,10029.6,17915.6,10020.3,18031.5,10012.0,18127.9,10005.2,18200.0,10000.0]},{"id":"plan_ferry","name":"Harbor Ferry","class":"Ferry","flags":[],"width":4,"dim":2,"pts":[15250.0,5950.0,16400.0,5900.0,17400.0,5750.0]}],"areas":[{"id":"land_0","kind":"Land","pts":[18439.4,5592.7,18408.1,5489.5,18357.3,5394.4,18288.9,5311.1,18205.6,5242.7,18110.5,5191.9,18007.3,5160.6,17900.0,5150.0,17792.7,5160.6,17689.5,5191.9,17594.4,5242.7,17511.1,5311.1,17442.7,5394.4,17391.9,5489.5,17360.6,5592.7,17350.0,5700.0,17360.6,5807.3,17391.9,5910.5,17442.7,6005.6,17511.1,6088.9,17594.4,6157.3,17689.5,6208.1,17792.7,6239.4,17900.0,6250.0,18007.3,6239.4,18110.5,6208.1,18205.6,6157.3,18288.9,6088.9,18357.3,6005.6,18408.1,5910.5,18439.4,5807.3,18450.0,5700.0]},{"id":"land_1","kind":"Land","pts":[2600.0,15500.0,4600.0,15000.0,6600.0,15400.0,8100.0,14800.0,10100.0,15100.0,12000.0,14600.0,14200.0,14400.0,16600.0,12000.0,17500.0,10800.0,16900.0,9600.0,17300.0,8200.0,16700.0,7000.0,15100.0,6900.0,14100.0,6300.0,14300.0,5400.0,15300.0,5000.0,16500.0,4600.0,16900.0,3400.0,15700.0,2400.0,16300.0,1200.0,16270.7,1149.8,16207.9,1215.0,16070.8,1331.4,15919.5,1436.8,15755.6,1530.4,15580.5,1611.1,15396.0,1678.2,15203.8,1731.1,15005.8,1769.3,14803.9,1792.3,14600.0,1800.0,14396.1,1792.3,14194.2,1769.3,13996.2,1731.1,13804.0,1678.2,13619.5,1611.1,13444.4,1530.4,13280.5,1436.8,13129.2,1331.4,12992.1,1215.0,12870.5,1088.9,12765.6,954.2,12678.3,812.3,12609.6,664.5,12560.0,512.1,12530.0,356.8,12520.0,200.0,12530.0,43.2,12538.3,0.0,0.0,0.0,0.0,15200.0]},{"id":"land_2","kind":"Land","pts":[21048.9,9767.1,20985.8,9655.6,20899.0,9550.0,20790.0,9452.1,20660.7,9363.6,20513.1,9286.0,20350.0,9220.6,20174.0,9168.5,19988.2,9130.7,19795.8,9107.7,19600.0,9100.0,19404.2,9107.7,19211.8,9130.7,19026.0,9168.5,18850.0,9220.6,18686.9,9286.0,18539.3,9363.6,18410.0,9452.1,18301.0,9550.0,18214.2,9655.6,18151.1,9767.1,18112.8,9882.5,18100.0,10000.0,18112.8,10117.5,18151.1,10232.9,18214.2,10344.4,18301.0,10450.0,18410.0,10547.9,18539.3,10636.4,18686.9,10714.0,18850.0,10779.4,19026.0,10831.5,19211.8,10869.3,19404.2,10892.3,19600.0,10900.0,19795.8,10892.3,19988.2,10869.3,20174.0,10831.5,20350.0,10779.4,20513.1,10714.0,20660.7,10636.4,20790.0,10547.9,20899.0,10450.0,20985.8,10344.4,21048.9,10232.9,21087.2,10117.5,21100.0,10000.0,21087.2,9882.5]},{"id":"county_heights_0","name":"Heights County","kind":"County","style":"heights","pts":[0.0,0.0,0.0,1800.0,2600.0,1800.0,2600.0,3600.0,5500.0,3600.0,8000.0,6000.0,12000.0,6000.0,15000.0,4200.0,15000.0,1769.9,14803.9,1792.3,14600.0,1800.0,14396.1,1792.3,14194.2,1769.3,13996.2,1731.1,13804.0,1678.2,13619.5,1611.1,13444.4,1530.4,13280.5,1436.8,13129.2,1331.4,12992.1,1215.0,12870.5,1088.9,12765.6,954.2,12678.3,812.3,12609.6,664.5,12560.0,512.1,12530.0,356.8,12520.0,200.0,12530.0,43.2,12538.3,0.0]},{"id":"county_frontier_0","name":"Frontier County","kind":"County","style":"frontier","pts":[5200.0,11200.0,8000.0,10400.0,8000.0,6000.0,5500.0,3600.0,2600.0,3600.0,2600.0,1800.0,0.0,1800.0,0.0,15200.0,2600.0,15500.0,3872.7,15181.8]},{"id":"county_southside_0","name":"Southside County","kind":"County","style":"southside","pts":[14400.0,9600.0,12000.0,10000.0,8000.0,10000.0,8000.0,10400.0,5200.0,11200.0,3872.7,15181.8,4600.0,15000.0,6600.0,15400.0,8100.0,14800.0,10100.0,15100.0,12000.0,14600.0,14200.0,14400.0,15126.3,13473.7]},{"id":"county_coast_0","name":"Coast County","kind":"County","style":"coast","pts":[15000.0,4200.0,12000.0,6000.0,12000.0,10000.0,14400.0,9600.0,15126.3,13473.7,16600.0,12000.0,17500.0,10800.0,16900.0,9600.0,17300.0,8200.0,16700.0,7000.0,15100.0,6900.0,14100.0,6300.0,14300.0,5400.0,15300.0,5000.0,16500.0,4600.0,16900.0,3400.0,15700.0,2400.0,16300.0,1200.0,16270.7,1149.8,16207.9,1215.0,16070.8,1331.4,15919.5,1436.8,15755.6,1530.4,15580.5,1611.1,15396.0,1678.2,15203.8,1731.1,15000.0,1769.9]},{"id":"county_coast_1","name":"Coast County","kind":"County","style":"coast","pts":[18408.1,5489.5,18357.3,5394.4,18288.9,5311.1,18205.6,5242.7,18110.5,5191.9,18007.3,5160.6,17900.0,5150.0,17792.7,5160.6,17689.5,5191.9,17594.4,5242.7,17511.1,5311.1,17442.7,5394.4,17391.9,5489.5,17360.6,5592.7,17350.0,5700.0,17360.6,5807.3,17391.9,5910.5,17442.7,6005.6,17511.1,6088.9,17594.4,6157.3,17689.5,6208.1,17792.7,6239.4,17900.0,6250.0,18007.3,6239.4,18110.5,6208.1,18205.6,6157.3,18288.9,6088.9,18357.3,6005.6,18408.1,5910.5,18439.4,5807.3,18450.0,5700.0,18439.4,5592.7]},{"id":"county_coast_2","name":"Coast County","kind":"County","style":"coast","pts":[20985.8,9655.6,20899.0,9550.0,20790.0,9452.1,20660.7,9363.6,20513.1,9286.0,20350.0,9220.6,20174.0,9168.5,19988.2,9130.7,19795.8,9107.7,19600.0,9100.0,19404.2,9107.7,19211.8,9130.7,19026.0,9168.5,18850.0,9220.6,18686.9,9286.0,18539.3,9363.6,18410.0,9452.1,18301.0,9550.0,18214.2,9655.6,18151.1,9767.1,18112.8,9882.5,18100.0,10000.0,18112.8,10117.5,18151.1,10232.9,18214.2,10344.4,18301.0,10450.0,18410.0,10547.9,18539.3,10636.4,18686.9,10714.0,18850.0,10779.4,19026.0,10831.5,19211.8,10869.3,19404.2,10892.3,19600.0,10900.0,19795.8,10892.3,19988.2,10869.3,20174.0,10831.5,20350.0,10779.4,20513.1,10714.0,20660.7,10636.4,20790.0,10547.9,20899.0,10450.0,20985.8,10344.4,21048.9,10232.9,21087.2,10117.5,21100.0,10000.0,21087.2,9882.5,21048.9,9767.1]},{"id":"county_central_0","name":"Central County","kind":"County","style":"central","pts":[8000.0,6000.0,8000.0,10000.0,12000.0,10000.0,12000.0,6000.0]},{"id":"water_0","kind":"Water","pts":[6849.2,2306.0,6817.1,2213.7,6764.1,2124.5,6691.2,2040.0,6599.6,1961.7,6491.0,1890.9,6367.0,1828.8,6230.0,1776.5,6082.2,1734.8,5926.1,1704.5,5764.5,1686.2,5600.0,1680.0,5435.5,1686.2,5273.9,1704.5,5117.8,1734.8,4970.0,1776.5,4833.0,1828.8,4709.0,1890.9,4600.4,1961.7,4508.8,2040.0,4435.9,2124.5,4382.9,2213.7,4350.8,2306.0,4340.0,2400.0,4350.8,2494.0,4382.9,2586.3,4435.9,2675.5,4508.8,2760.0,4600.4,2838.3,4709.0,2909.1,4833.0,2971.2,4970.0,3023.5,5117.8,3065.2,5273.9,3095.5,5435.5,3113.8,5600.0,3120.0,5764.5,3113.8,5926.1,3095.5,6082.2,3065.2,6230.0,3023.5,6367.0,2971.2,6491.0,2909.1,6599.6,2838.3,6691.2,2760.0,6764.1,2675.5,6817.1,2586.3,6849.2,2494.0,6860.0,2400.0]},{"id":"water_1","kind":"Water","pts":[8287.3,3934.6,7491.8,5127.9,7480.2,5149.4,7472.9,5172.8,7171.0,6584.1,7171.3,6618.4,7368.3,7997.1,7072.2,9576.0,6871.3,10981.6,6870.2,11006.7,6873.9,11031.5,7269.3,12613.3,7170.2,15007.3,7174.1,15032.5,7182.9,15056.5,7196.2,15078.2,7213.4,15097.0,7245.3,15117.9,7269.4,15126.3,7294.6,15129.9,7320.0,15128.4,7344.7,15122.1,7367.7,15111.0,7388.0,15095.7,7412.0,15066.0,7422.7,15042.9,7428.7,15018.1,7529.8,12593.0,7526.1,12568.5,7132.3,10993.2,7328.3,9621.2,7629.6,8009.9,7628.7,7981.6,7432.0,6604.6,7721.9,5251.5,8508.2,4072.1,9116.3,2858.1,9622.4,1443.7,9629.7,1409.3,9730.0,-3.5,9723.3,-41.1,9706.1,-75.1,9679.7,-102.7,9646.5,-121.4,9621.9,-128.1,9583.8,-129.0,9558.9,-123.3,9535.7,-113.0,9505.6,-89.4,9490.0,-69.3,9478.6,-46.5,9471.9,-21.9,9371.6,1373.0,8880.2,2748.9]},{"id":"water_2","kind":"Water","pts":[2837.5,10112.2,2822.0,10069.4,2800.5,10027.8,2773.2,9987.9,2740.5,9950.0,2702.5,9914.5,2659.6,9881.8,2612.4,9852.1,2561.1,9825.8,2506.4,9803.1,2448.7,9784.3,2388.7,9769.4,2326.8,9758.6,2263.7,9752.2,2200.0,9750.0,2136.3,9752.2,2073.2,9758.6,2011.3,9769.4,1951.3,9784.3,1893.6,9803.1,1838.9,9825.8,1787.6,9852.1,1740.4,9881.8,1697.5,9914.5,1659.5,9950.0,1626.8,9987.9,1599.5,10027.8,1578.0,10069.4,1562.5,10112.2,1553.1,10155.9,1550.0,10200.0,1553.1,10244.1,1562.5,10287.8,1578.0,10330.6,1599.5,10372.2,1626.8,10412.1,1659.5,10450.0,1697.5,10485.5,1740.4,10518.2,1787.6,10547.9,1838.9,10574.2,1893.6,10596.9,1951.3,10615.7,2011.3,10630.6,2073.2,10641.4,2136.3,10647.8,2200.0,10650.0,2263.7,10647.8,2326.8,10641.4,2388.7,10630.6,2448.7,10615.7,2506.4,10596.9,2561.1,10574.2,2612.4,10547.9,2659.6,10518.2,2702.5,10485.5,2740.5,10450.0,2773.2,10412.1,2800.5,10372.2,2822.0,10330.6,2837.5,10287.8,2846.9,10244.1,2850.0,10200.0,2846.9,10155.9]},{"id":"lots_Cabin_Woods_lots_0","name":"Cabin Woods lots","kind":"LotZone","pts":[2800.0,1600.0,5200.0,1600.0,5200.0,400.0,2800.0,400.0]},{"id":"lots_Hills_Estates_0","name":"Hills Estates","kind":"LotZone","pts":[11200.0,3600.0,14400.0,3600.0,14400.0,1792.4,14194.2,1769.3,13996.2,1731.1,13804.0,1678.2,13619.5,1611.1,13444.4,1530.4,13280.5,1436.8,13129.2,1331.4,12992.1,1215.0,12977.6,1200.0,11200.0,1200.0]},{"id":"lots_Heights_Foothills_0","name":"Heights Foothills","kind":"LotZone","pts":[12400.0,5000.0,14600.0,5000.0,14600.0,4000.0,12400.0,4000.0]},{"id":"lots_Desert_lots_0","name":"Desert lots","kind":"LotZone","pts":[2000.0,7600.0,5400.0,7600.0,5400.0,4600.0,2000.0,4600.0]},{"id":"lots_Old_Town_lots_0","name":"Old Town lots","kind":"LotZone","pts":[5400.0,8200.0,2600.0,8200.0,2600.0,9845.8,2659.6,9881.8,2702.5,9914.5,2740.5,9950.0,2773.2,9987.9,2781.5,10000.0,5400.0,10000.0]},{"id":"lots_Ranch_lots_0","name":"Ranch lots","kind":"LotZone","pts":[300.0,7800.0,300.0,10600.0,1600.0,10600.0,1600.0,10373.0,1578.0,10330.6,1562.5,10287.8,1553.1,10244.1,1550.0,10200.0,1553.1,10155.9,1562.5,10112.2,1578.0,10069.4,1600.0,10027.0,1600.0,7800.0]},{"id":"lots_Southside_Suburbs_0","name":"Southside Suburbs","kind":"LotZone","pts":[5000.0,14600.0,7000.0,14600.0,7000.0,11600.0,5000.0,11600.0]},{"id":"lots_Bayview_Waterfront_0","name":"Bayview Waterfront","kind":"LotZone","pts":[15100.0,4000.0,16600.0,4000.0,16600.0,3150.0,15700.0,2400.0,15900.0,2000.0,15100.0,2000.0]},{"id":"lots_Ocean_Dr_Waterfront_0","name":"Ocean Dr Waterfront","kind":"LotZone","pts":[14900.0,11000.0,14900.0,12800.0,15800.0,12800.0,16600.0,12000.0,16800.0,11733.3,16800.0,11000.0]},{"id":"lots_Palm_Key_0","name":"Palm Key","kind":"LotZone","pts":[20513.1,9286.0,20350.0,9220.6,20174.0,9168.5,19988.2,9130.7,19795.8,9107.7,19600.0,9100.0,19404.2,9107.7,19211.8,9130.7,19026.0,9168.5,18850.0,9220.6,18686.9,9286.0,18539.3,9363.6,18410.0,9452.1,18301.0,9550.0,18214.2,9655.6,18151.1,9767.1,18112.8,9882.5,18100.0,10000.0,18112.8,10117.5,18151.1,10232.9,18214.2,10344.4,18301.0,10450.0,18410.0,10547.9,18539.3,10636.4,18686.9,10714.0,18850.0,10779.4,19026.0,10831.5,19211.8,10869.3,19404.2,10892.3,19600.0,10900.0,19795.8,10892.3,19988.2,10869.3,20174.0,10831.5,20350.0,10779.4,20513.1,10714.0,20660.7,10636.4,20790.0,10547.9,20899.0,10450.0,20985.8,10344.4,21048.9,10232.9,21087.2,10117.5,21100.0,10000.0,21087.2,9882.5,21048.9,9767.1,20985.8,9655.6,20899.0,9550.0,20790.0,9452.1,20660.7,9363.6]}],"labels":[{"text":"Heights County","kind":"County","x":6900.0,"y":500.0,"style":"heights"},{"text":"Frontier County","kind":"County","x":2600.0,"y":13600.0,"style":"frontier"},{"text":"Southside County","kind":"County","x":10000.0,"y":14550.0,"style":"southside"},{"text":"Coast County","kind":"County","x":19000.0,"y":3200.0,"style":"coast"},{"text":"Central County","kind":"County","x":10000.0,"y":6250.0,"style":"central"},{"text":"Mega Mall","kind":"District","x":8600.0,"y":7700.0},{"text":"Downtown","kind":"District","x":10000.0,"y":7450.0},{"text":"The Strip","kind":"District","x":11400.0,"y":8100.0},{"text":"The Heights","kind":"District","x":10000.0,"y":4150.0},{"text":"University","kind":"District","x":12050.0,"y":4750.0},{"text":"Southside","kind":"District","x":8850.0,"y":12000.0},{"text":"Industrial","kind":"District","x":12000.0,"y":12050.0},{"text":"The Hills","kind":"District","x":12700.0,"y":1450.0},{"text":"Cabin Woods","kind":"District","x":4000.0,"y":1950.0},{"text":"Desert Outskirts","kind":"District","x":3600.0,"y":6000.0},{"text":"Old Town","kind":"District","x":4000.0,"y":9750.0},{"text":"Harbor","kind":"District","x":14500.0,"y":6550.0},{"text":"Puffington Beach","kind":"District","x":17450.0,"y":10050.0},{"text":"Palm Key","kind":"District","x":19600.0,"y":11500.0},{"text":"The Wastes","kind":"District","x":12600.0,"y":13600.0},{"text":"South Quarry","kind":"District","x":4800.0,"y":14450.0},{"text":"North Quarry","kind":"District","x":7000.0,"y":2550.0},{"text":"Harbor Island","kind":"District","x":17900.0,"y":6600.0},{"text":"Bayview","kind":"District","x":15800.0,"y":3650.0},{"text":"Puffington Sound","kind":"Water","x":19500.0,"y":6900.0},{"text":"Ocean","kind":"Water","x":18600.0,"y":14300.0},{"text":"Puff Bay","kind":"Water","x":14400.0,"y":1050.0},{"text":"Puffington River","kind":"Water","x":7750.0,"y":13200.0},{"text":"South Channel","kind":"Water","x":4500.0,"y":15600.0},{"text":"Hills Reservoir","kind":"Water","x":5600.0,"y":2400.0},{"text":"Downtown Central Station","kind":"Place","x":10000.0,"y":8000.0,"icon":"start","style":"central","note":"Where every player spawns. Main subway hub in the middle of the loop."},{"text":"Downtown Detention Center","kind":"Place","x":9500.0,"y":6600.0,"icon":"prison","style":"central","note":"Central County main prison."},{"text":"Bail Bonds Office","kind":"Place","x":9950.0,"y":6550.0,"icon":"shop","style":"central","note":"Post cash bail with another player vouching as bondsman."},{"text":"Civic Complex & Job Center","kind":"Place","x":9600.0,"y":9100.0,"icon":"shop","style":"central","note":"City hall (H03). Apply for police, prison C.O. and shop jobs."},{"text":"Mega Mall","kind":"Place","x":8550.0,"y":7000.0,"icon":"shop","style":"central","note":"Mac works security here. Room packs become the store interiors."},{"text":"Car Dealership","kind":"Place","x":8500.0,"y":9300.0,"icon":"shop","style":"central","note":"Buy cars. Showroom from the Car_Dealer pack."},{"text":"The Pink Haze, 123 Kush Ave","kind":"Place","x":11300.0,"y":7600.0,"icon":"lounge","style":"central","note":"Strip club from the pilot. Red and purple neon."},{"text":"Boho Club","kind":"Place","x":11550.0,"y":9000.0,"icon":"lounge","style":"central","note":"Nightclub on The Strip."},{"text":"Cigar Lounge","kind":"Place","x":11500.0,"y":6600.0,"icon":"lounge","style":"central","note":"Big Al's premium space."},{"text":"Strip Dispensary","kind":"Place","x":11000.0,"y":8600.0,"icon":"disp","style":"central","note":"Rentable dispensary on The Strip."},{"text":"Terp's Radio Station","kind":"Place","x":10600.0,"y":6700.0,"icon":"shop","style":"central","note":"Reactive radio keyed to missions."},{"text":"Detective & Security Office","kind":"Place","x":10700.0,"y":9400.0,"icon":"shop","style":"central","note":"Mac's investigations office."},{"text":"Rent-a-Business Row","kind":"Place","x":9200.0,"y":8100.0,"icon":"shop","style":"central","note":"Already-built city businesses to rent and run."},{"text":"Puffers Retail Flagship","kind":"Place","x":11000.0,"y":7050.0,"icon":"shop","style":"central","note":"Brand flagship store (later pack)."},{"text":"Heights High-Rise Apartments","kind":"Place","x":9000.0,"y":5250.0,"icon":"home","style":"heights","note":"Rented 1bd/2bd/3bd apartments. Lobby, hallways, elevators."},{"text":"Premium Penthouses","kind":"Place","x":9700.0,"y":4850.0,"icon":"home","style":"heights","note":"Top-floor rentals with rooftop pools."},{"text":"Puffington University","kind":"Place","x":11300.0,"y":5100.0,"icon":"shop","style":"heights","note":"Campus with cherry-tree quad (X12)."},{"text":"Heights Gym","kind":"Place","x":8400.0,"y":4600.0,"icon":"shop","style":"heights","note":"Gym from the GymEAP pack."},{"text":"Heights Dispensary","kind":"Place","x":10400.0,"y":4400.0,"icon":"disp","style":"heights","note":"Rentable dispensary."},{"text":"The Hills mansions","kind":"Place","x":12700.0,"y":2400.0,"icon":"home","style":"heights","note":"Mansion lots and the Modern House prebuilt."},{"text":"Cabin Woods","kind":"Place","x":4000.0,"y":1000.0,"icon":"home","style":"heights","note":"Forest cabins and Swedish House. Cheapest homes."},{"text":"North Quarry","kind":"Place","x":7000.0,"y":3000.0,"icon":"shop","style":"heights","note":"Quarry lots (Rocky Sand pack)."},{"text":"Hills Correctional Facility","kind":"Place","x":1300.0,"y":800.0,"icon":"prison","style":"heights","note":"Heights County main prison, on a ridge."},{"text":"Lakeside Lounge","kind":"Place","x":5600.0,"y":3450.0,"icon":"lounge","style":"heights","note":"Cannabis lounge on Hills Reservoir."},{"text":"The Puffers Club","kind":"Place","x":8700.0,"y":10900.0,"icon":"lounge","style":"southside","note":"The crew lounge and main social hub."},{"text":"Master Sowa's Restaurant","kind":"Place","x":9250.0,"y":10650.0,"icon":"shop","style":"southside","note":"Between the bodega and liquor store."},{"text":"Bodega & Liquor Store","kind":"Place","x":9600.0,"y":10950.0,"icon":"shop","style":"southside","note":"Either side of Sowa's, as in the bible."},{"text":"Corner Store","kind":"Place","x":10100.0,"y":11500.0,"icon":"shop","style":"southside","note":"Munchie gets chased out here in the pilot."},{"text":"Haze's Apartment, 1235 Kush Ave","kind":"Place","x":9150.0,"y":11400.0,"icon":"home","style":"southside","note":"Haze's place. The pilot opens here."},{"text":"Southside Dispensary","kind":"Place","x":8350.0,"y":11500.0,"icon":"disp","style":"southside","note":"Rentable dispensary."},{"text":"Pawn Counter","kind":"Place","x":9750.0,"y":11850.0,"icon":"shop","style":"southside","note":"Sell any inventory item."},{"text":"Kush Ave Housing Projects","kind":"Place","x":8300.0,"y":12400.0,"icon":"home","style":"southside","note":"Low-rent towers. Cheapest city apartments."},{"text":"Lato's Warehouse","kind":"Place","x":11000.0,"y":10700.0,"icon":"shop","style":"southside","note":"Stock house in the grow corridor."},{"text":"Jokes Up's Laboratory","kind":"Place","x":12500.0,"y":11200.0,"icon":"shop","style":"southside","note":"Abandoned warehouse turned lab."},{"text":"Wholesale Market","kind":"Place","x":11700.0,"y":11600.0,"icon":"shop","style":"southside","note":"Shop owners restock supply here."},{"text":"Industrial Wastes","kind":"Place","x":12600.0,"y":13100.0,"icon":"shop","style":"southside","note":"Scrapyards and ruins."},{"text":"South Quarry","kind":"Place","x":4600.0,"y":13900.0,"icon":"shop","style":"southside","note":"Quarry lots in the south."},{"text":"Southside Correctional","kind":"Place","x":10300.0,"y":13800.0,"icon":"prison","style":"southside","note":"Southside County main prison."},{"text":"Puffington State Penitentiary","kind":"Place","x":1200.0,"y":6200.0,"icon":"prison","style":"frontier","note":"Frontier main prison. BL01 King of the Yard."},{"text":"Gas Station (H01)","kind":"Place","x":6300.0,"y":7600.0,"icon":"shop","style":"frontier","note":"H01 First Day Out stop on the road from the Pen."},{"text":"Old Town","kind":"Place","x":4000.0,"y":9100.0,"icon":"shop","style":"frontier","note":"Western frontier town (OldWest pack)."},{"text":"The Bazaar","kind":"Place","x":3000.0,"y":4900.0,"icon":"shop","style":"frontier","note":"Desert market (later pack)."},{"text":"Desert starter homes","kind":"Place","x":4400.0,"y":6600.0,"icon":"home","style":"frontier","note":"Starter prebuilt House model on desert lots."},{"text":"Roadhouse Dispensary","kind":"Place","x":5900.0,"y":9900.0,"icon":"disp","style":"frontier","note":"Highway dispensary."},{"text":"Desert Cliffs Lounge","kind":"Place","x":2000.0,"y":8000.0,"icon":"lounge","style":"frontier","note":"Open-air lounge on the cliffs."},{"text":"Harbor & Docks","kind":"Place","x":14700.0,"y":5150.0,"icon":"shop","style":"coast","note":"Cranes and ships (ShipAndSea)."},{"text":"Harbor Ferry Pier","kind":"Place","x":15250.0,"y":5950.0,"icon":"transit","style":"coast","note":"Ferry to Harbor Island Prison."},{"text":"Harbor Island Prison","kind":"Place","x":17900.0,"y":5700.0,"icon":"prison","style":"coast","note":"Coast County main prison, offshore."},{"text":"Yacht Marina","kind":"Place","x":16250.0,"y":7350.0,"icon":"home","style":"coast","note":"Moorings for player yachts."},{"text":"Tropical Garden Lounge","kind":"Place","x":15850.0,"y":8150.0,"icon":"lounge","style":"coast","note":"Beach lounge for nightlife missions."},{"text":"Beach Event Grounds","kind":"Place","x":16250.0,"y":9250.0,"icon":"shop","style":"coast","note":"Stage for beach events."},{"text":"Club Tropix Beach Resort","kind":"Place","x":16450.0,"y":11000.0,"icon":"lounge","style":"coast","note":"Waiting on FBX export from SketchUp."},{"text":"Sukkar Villa & waterfront estates","kind":"Place","x":15600.0,"y":12100.0,"icon":"home","style":"coast","note":"Luxury beachfront homes."},{"text":"Palm Key private island","kind":"Place","x":19600.0,"y":10000.0,"icon":"home","style":"coast","note":"Mega-mansion island lots, reached by bridge."},{"text":"Beach Dispensary","kind":"Place","x":16600.0,"y":10100.0,"icon":"disp","style":"coast","note":"Rentable dispensary on Ocean Dr."},{"text":"Bayview Waterfront","kind":"Place","x":15800.0,"y":3000.0,"icon":"home","style":"coast","note":"Waterfront house lots on Puff Bay."},{"text":"Central Jail 1","kind":"Landmark","x":8400.0,"y":6400.0,"icon":"jail","style":"central","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Central Jail 2","kind":"Landmark","x":11600.0,"y":6300.0,"icon":"jail","style":"central","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Central Jail 3","kind":"Landmark","x":8300.0,"y":9700.0,"icon":"jail","style":"central","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Central Jail 4","kind":"Landmark","x":10300.0,"y":9600.0,"icon":"jail","style":"central","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Central Jail 5","kind":"Landmark","x":11700.0,"y":9600.0,"icon":"jail","style":"central","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Heights Jail 1","kind":"Landmark","x":2200.0,"y":900.0,"icon":"jail","style":"heights","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Heights Jail 2","kind":"Landmark","x":6200.0,"y":1300.0,"icon":"jail","style":"heights","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Heights Jail 3","kind":"Landmark","x":10800.0,"y":800.0,"icon":"jail","style":"heights","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Heights Jail 4","kind":"Landmark","x":13600.0,"y":3900.0,"icon":"jail","style":"heights","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Heights Jail 5","kind":"Landmark","x":8000.0,"y":3400.0,"icon":"jail","style":"heights","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Frontier Jail 1","kind":"Landmark","x":1000.0,"y":3000.0,"icon":"jail","style":"frontier","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Frontier Jail 2","kind":"Landmark","x":3200.0,"y":3900.0,"icon":"jail","style":"frontier","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Frontier Jail 3","kind":"Landmark","x":6600.0,"y":6400.0,"icon":"jail","style":"frontier","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Frontier Jail 4","kind":"Landmark","x":1200.0,"y":11500.0,"icon":"jail","style":"frontier","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Frontier Jail 5","kind":"Landmark","x":3400.0,"y":12600.0,"icon":"jail","style":"frontier","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Southside Jail 1","kind":"Landmark","x":6400.0,"y":12000.0,"icon":"jail","style":"southside","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Southside Jail 2","kind":"Landmark","x":7900.0,"y":14200.0,"icon":"jail","style":"southside","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Southside Jail 3","kind":"Landmark","x":11000.0,"y":12700.0,"icon":"jail","style":"southside","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Southside Jail 4","kind":"Landmark","x":13600.0,"y":12200.0,"icon":"jail","style":"southside","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Southside Jail 5","kind":"Landmark","x":13000.0,"y":14200.0,"icon":"jail","style":"southside","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Coast Jail 1","kind":"Landmark","x":15600.0,"y":1200.0,"icon":"jail","style":"coast","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Coast Jail 2","kind":"Landmark","x":15600.0,"y":4400.0,"icon":"jail","style":"coast","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Coast Jail 3","kind":"Landmark","x":15100.0,"y":7400.0,"icon":"jail","style":"coast","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Coast Jail 4","kind":"Landmark","x":16000.0,"y":9600.0,"icon":"jail","style":"coast","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08},{"text":"Coast Jail 5","kind":"Landmark","x":19000.0,"y":9300.0,"icon":"jail","style":"coast","note":"County jail (AI police). Busted players go to the nearest main prison.","minZoom":0.08}]}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ============================================================ data + helpers
+const LAYOUT = JSON.parse(document.getElementById('layout').textContent);
+const ORIGIN = [10000, 8000];             // MapConfig worldOriginOnMapM (Downtown Central Station)
+const STYLE = {
+  sea:'#071521', land:'#1F262E', water:'#0F2E44', park:'#1D3825',
+  county:{central:'#E9A23B',heights:'#5B8FC7',southside:'#D9734E',frontier:'#A781C9',coast:'#3FB892'},
+  countyLand:{central:'#3A3226',heights:'#25303D',southside:'#3A2A25',frontier:'#33293D',coast:'#213830'},
+  icons:{prison:'#FF5A4F',jail:'#FF8A80',disp:'#7ED957',lounge:'#C77DFF',shop:'#45C6EC',home:'#FFC94A',transit:'#FFC94A',start:'#FFD23F'},
+  uses:{Home:'#FFC94A',Shop:'#45C6EC',Venue:'#C77DFF',Attraction:'#FF7AB6',Grow:'#7ED957'}
+};
+// Road classes: width (m), sidewalk (m), 2D fill, 3D asphalt, min half-width in px when zoomed out.
+const CLS = {
+  highway: {w:24, side:0,   c2:'#FFC94A', c3:'#2f3338', min:1.5, name:'Highway'},
+  road:    {w:10, side:0,   c2:'#E6C47A', c3:'#363a3f', min:1.0, name:'Road'},
+  arterial:{w:20, side:4.5, c2:'#F2F4F7', c3:'#34383d', min:1.0, name:'Avenue'},
+  street:  {w:13, side:3.5, c2:'#C5CCD4', c3:'#3a3e43', min:0.55,name:'Street'},
+  alley:   {w:6,  side:0,   c2:'#8E97A1', c3:'#45474b', min:0.35,name:'Alley'},
+  path:    {w:3,  side:0,   c2:'#9fb59a', c3:'#8d8a80', min:0.4, name:'Path'},
+  trail:   {w:2.2,side:0,   c2:'#C9A876', c3:'#8a6f4c', min:0.5, name:'Trail'},
+  ferry:   {w:4,  side:0,   c2:'#FFC94A', c3:'#FFC94A', min:0.7, name:'Ferry'},
+  rail:    {w:5,  side:0,   c2:'#9AA3AE', c3:'#5a5550', min:0.6, name:'Rail'}
+};
+let seed = 20261128;
+function rand(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }
+const rr=(a,b)=>a+(b-a)*rand(), pick=a=>a[Math.floor(rand()*a.length)];
+function hash(n){ n=Math.imul(n^61^(n>>>16),9); n^=n>>>4; n=Math.imul(n,0x27d4eb2d); return ((n^(n>>>15))>>>0)/4294967296; }
+function pip(x,y,p){ let c=false; for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){ const xi=p[i],yi=p[i+1],xj=p[j],yj=p[j+1];
+  if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) c=!c; } return c; }
+function bboxOf(p){ let a=[1e9,1e9,-1e9,-1e9]; for(let i=0;i<p.length;i+=2){a[0]=Math.min(a[0],p[i]);a[1]=Math.min(a[1],p[i+1]);a[2]=Math.max(a[2],p[i]);a[3]=Math.max(a[3],p[i+1]);} return a; }
+const A = {Land:[],Water:[],County:[],LotZone:[]};
+for(const a of LAYOUT.areas){ (A[a.kind]||(A[a.kind]=[])).push({...a, bb:bboxOf(a.pts)}); }
+const inBB=(x,y,b,m=0)=>x>=b[0]-m&&x<=b[2]+m&&y>=b[1]-m&&y<=b[3]+m;
+const inWater=(x,y)=>A.Water.some(w=>inBB(x,y,w.bb)&&pip(x,y,w.pts));
+const onLand=(x,y)=>A.Land.some(l=>inBB(x,y,l.bb)&&pip(x,y,l.pts))&&!inWater(x,y);
+function countyAt(x,y){ for(const c of A.County) if(inBB(x,y,c.bb)&&pip(x,y,c.pts)) return c; return null; }
+const CORE={x0:8000,y0:6000,x1:12000,y1:10000};
+const inCore=(x,y,m=0)=>x>=CORE.x0-m&&x<=CORE.x1+m&&y>=CORE.y0-m&&y<=CORE.y1+m;
+const ord=n=>n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
+
+// ============================================================ world generation (stand-in until a survey pack exists)
+// roads: {name, cls, pts:[[x,y]], z:[], tun:[], noNode, src}
+// boxes: {x,y,w,d,h,rot,col,kind}  kind 0 building, 1 pillar, 2 tree
+let W;
+function generate(){
+  seed = 20261128;
+  W = {roads:[], boxes:[], trees:[], areas:[], crossings:[], src:'generated'};
+  const R = W.roads;
+  const add = o => { o.z=o.z||o.pts.map(()=>0); o.tun=o.tun||o.pts.map(()=>0); o.src=o.src||'gen'; R.push(o); return o; };
+
+  // ---- Puffington Core: City Sample style grid, avenues every 120 m, streets every 80 m
+  const AV=[], ST=[]; for(let x=8040;x<=11960;x+=120) AV.push(x); for(let y=6040;y<=9960;y+=80) ST.push(y);
+  const avName=i=> i%4===0 ? (['Harbor Ave','Blunt Ave','Puff Blvd','Grand Ave','Central Ave','Union Ave','Mercer Ave','Canal Ave','Ember Ave'][i/4]||ord(i+1)+' Ave') : ord(i+1)+' Ave';
+  const stWords=['Haze','Cherry','Lemon','Mango','Pine','Cedar','Maple','Oak','Willow','Market','Union','Grand','Bleeker','Ember','Ash','Clover','Indigo','Amber','Jade','Coral','Sage','Mint','Ivy','Juniper','Olive','Ruby','Pearl','Onyx','Copper','Silver','Gold','Iron','Stone','River','Bay','Dock','Mill','Bridge','Tower','Park','Garden','Grove','Hill','Ridge','Vale','Field','Meadow','Brook','Spring','Summit'];
+  const stName=j=> j%5===0 ? stWords[j%stWords.length]+' Blvd' : stWords[j%stWords.length]+' St';
+  const avCls=i=> i%4===0?'arterial':'street', stCls=j=> j%5===0?'arterial':'street';
+  const line=(fixed,list,vertical,cls,name,keepBridge)=>{
+    let run=[];
+    const flush=()=>{ if(run.length>1) add({name,cls,pts:run}); run=[]; };
+    for(let k=0;k<list.length-1;k++){
+      const a=vertical?[fixed,list[k]]:[list[k],fixed], b=vertical?[fixed,list[k+1]]:[list[k+1],fixed];
+      const m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+      const ok=onLand(a[0],a[1])&&onLand(b[0],b[1]);
+      const wet=inWater(m[0],m[1]);
+      if(!ok||(wet&&!keepBridge)){ flush(); continue; }
+      if(!run.length) run.push(a); run.push(b);
+    }
+    flush();
+  };
+  AV.forEach((x,i)=>line(x,ST,true,avCls(i),avName(i),i%4===0));
+  ST.forEach((y,j)=>line(y,AV,false,stCls(j),stName(j),j%5===0||j%3===0));
+  // Downtown alleys, mid-block east-west
+  for(let j=0;j<ST.length-1;j++) for(let i=0;i<AV.length-1;i++){
+    const y=ST[j]+40, x0=AV[i], x1=AV[i+1];
+    if(Math.hypot((x0+x1)/2-10000,y-7450)>1150||hash(i*131+j*7)<.25) continue;
+    if(!onLand(x0,y)||!onLand(x1,y)||inWater((x0+x1)/2,y)) continue;
+    add({name:'Alley',cls:'alley',pts:[[x0,y],[x1,y]]});
+  }
+  // Kush Ave: the diagonal through the core into Southside (The Pink Haze is 123 Kush Ave; Haze's apartment 1235 Kush Ave)
+  add({name:'Kush Ave',cls:'arterial',pts:[[12040,6290],[11300,7600],[10200,9545],[9150,11400],[8880,11880]]});
+
+  // ---- Puffington Loop: elevated freeway over the core, with spurs out to every highway and ramps down to the grid
+  const ring=[]; const r0=160, X0=8640, X1=11400, Y0=6440, Y1=9480;
+  const straight=(ax,ay,bx,by)=>{ const L=Math.hypot(bx-ax,by-ay), n=Math.round(L/10); for(let k=0;k<n;k++) ring.push([ax+(bx-ax)*k/n, ay+(by-ay)*k/n]); };
+  const arc=(cx,cy,a0)=>{ for(let k=0;k<8;k++){ const a=a0+k/8*Math.PI/2; ring.push([cx+Math.cos(a)*r0, cy+Math.sin(a)*r0]); } };
+  straight(X0+r0,Y0,X1-r0,Y0); arc(X1-r0,Y0+r0,-Math.PI/2);
+  straight(X1,Y0+r0,X1,Y1-r0); arc(X1-r0,Y1-r0,0);
+  straight(X1-r0,Y1,X0+r0,Y1); arc(X0+r0,Y1-r0,Math.PI/2);
+  straight(X0,Y1-r0,X0,Y0+r0); arc(X0+r0,Y0+r0,Math.PI);
+  ring.push([...ring[0]]);
+  add({name:'Puffington Loop (I-420)',cls:'highway',pts:ring,z:ring.map(()=>10),noNode:true});
+  // highways from the world plan become real roads; spurs climb from them up onto the loop
+  const spurFrom={plan_Frontier_Hwy:[X0,8120],plan_Old_Town_Rd:[X0,9300],plan_Quarry_Rd:[X0,9200],plan_Cabin_Rd:[X0,6700],
+    plan_Hills_Pass:[10600,Y0],plan_Coast_Hwy:[X1,6600],plan_Ocean_Dr:[X1,8600],plan_Wastes_Rd:[X1,9200],plan_Southside_Ave:[10000,Y1]};
+  for(const pr of LAYOUT.roads){
+    const pts=[]; for(let i=0;i<pr.pts.length;i+=2) pts.push([pr.pts[i],pr.pts[i+1]]);
+    if(pr.class==='Ferry'){ add({name:'Harbor Island Ferry',cls:'ferry',pts,noNode:true,ferry:true}); continue; }
+    const cls=pr.width>=14?'highway':'road';
+    const o=add({name:pr.name,cls,pts});
+    if(pr.id==='plan_Hills_Pass') o.tunnelFrac=[.36,.56];
+    const s=spurFrom[pr.id];
+    if(s){ const e=pts[0]; const L=Math.hypot(e[0]-s[0],e[1]-s[1]); const n=Math.max(2,Math.round(L/20)); const sp=[],sz=[];
+      for(let k=0;k<=n;k++){ const t=k/n; sp.push([s[0]+(e[0]-s[0])*t, s[1]+(e[1]-s[1])*t]); sz.push(10*(1-smooth(Math.max(0,(t-.35)/.65)))); }
+      add({name:pr.name+' (spur)',cls:'highway',pts:sp,z:sz,noNode:true}); }
+  }
+  const ramp=(ax,ay,dx,dy,nx,ny,name)=>{ const P=(t,o)=>[ax+dx*t+nx*o, ay+dy*t+ny*o];
+    add({name,cls:'road',pts:[[ax,ay],P(60,16),P(120,18),P(180,16),P(240,0)],z:[10,8,5.5,2.5,0],noNode:true}); };
+  ramp(9000,Y0,1,0,0,1,'Loop ramp'); ramp(10560,Y0,1,0,0,1,'Loop ramp');
+  ramp(11040,Y1,-1,0,0,-1,'Loop ramp'); ramp(9600,Y1,-1,0,0,-1,'Loop ramp');
+  ramp(X0,7000,0,1,-1,0,'Loop ramp'); ramp(X1,8200,0,-1,1,0,'Loop ramp');
+
+  // ---- outskirts towns, one per district outside the core
+  const towns=[
+    ['The Heights',10000,4300,950,'urban',.08],['University',12100,4750,620,'campus',.25],['Southside',8900,12050,1150,'urban',-.06],
+    ['Industrial',12050,12000,950,'industrial',.12],['Harbor',14550,6500,720,'industrial',-.2],['Bayview',15800,3500,700,'suburb',0],
+    ['The Hills',12700,1700,1100,'suburb',0],['Cabin Woods',4000,1500,1050,'woods',0],['Desert Outskirts',3600,6100,1000,'desert',.0],
+    ['Old Town',4000,9500,820,'oldtown',.05],['Puffington Beach',16500,10200,650,'suburb',0],['Palm Key',19600,10050,900,'suburb',0],
+    ['The Wastes',12600,13500,700,'industrial',.3],['South Quarry',4700,14100,600,'industrial',-.4],['North Quarry',7000,2800,520,'industrial',.5],
+    ['Harbor Island',17900,6150,420,'industrial',0],['Ocean Dr Waterfront',15800,11900,700,'suburb',0],['Southside Suburbs',6000,13100,900,'suburb',0]];
+  for(const t of towns) makeTown(add,...t);
+
+  // ---- trails in the woods and hills
+  for(const [cx,cy,n] of [[4000,1400,9],[12900,1500,7],[5600,2900,4],[14000,4200,3]]){
+    for(let k=0;k<n;k++){ let x=cx+rr(-900,900), y=cy+rr(-700,700), h=rr(0,6.28); const pts=[];
+      for(let s=0;s<60;s++){ if(!onLand(x,y)) break; pts.push([x,y]); h+=rr(-.35,.35); x+=Math.cos(h)*18; y+=Math.sin(h)*18; }
+      if(pts.length>8) add({name:'Trail',cls:'trail',pts,noNode:true}); }
+  }
+
+  node(R);
+  for(const r of R) finishRoad(r);
+  connectEnds(add);
+  // buildings and street trees in the core (after the roads exist, so nothing sits on a road)
+  indexRoads();
+  W.boxes=W.boxes.filter(b=>!nearRoad(b.x,b.y,b.w*.45,b.d*.45));
+  W.trees=W.trees.filter(t=>!nearestRoad(t.x,t.y,t.r*.5));
+  coreBlocks(AV,ST,avCls,stCls);
+  crossings(AV,ST);
+}
+function smooth(t){ t=Math.min(1,Math.max(0,t)); return t*t*(3-2*t); }
+
+function makeTown(add,name,cx,cy,R,type,ang){
+  const c=Math.cos(ang), s=Math.sin(ang);
+  const toW=(u,v)=>[cx+u*c-v*s, cy+u*s+v*c];
+  const ok=(x,y)=>onLand(x,y)&&!inCore(x,y,60)&&Math.hypot(x-cx,y-cy)<R*(0.78+0.3*hash(Math.round(x/97)*31+Math.round(y/97)));
+  const t0=W.roads.length;
+  if(type==='urban'||type==='oldtown'||type==='desert'||type==='industrial'||type==='campus'){
+    const bx={urban:110,oldtown:90,desert:150,industrial:230,campus:140}[type], by={urban:80,oldtown:70,desert:110,industrial:170,campus:120}[type];
+    const cls=type==='industrial'?'road':'street';
+    const us=[],vs=[]; for(let u=-R;u<=R;u+=bx) us.push(u); for(let v=-R;v<=R;v+=by) vs.push(v);
+    const grid=(isU)=>{ (isU?us:vs).forEach((f,i)=>{ let run=[]; const flush=()=>{ if(run.length>1) add({name:townStreet(name,isU,i),cls:(i%4===0&&type!=='industrial')?'arterial':cls,pts:run}); run=[]; };
+      for(const q of (isU?vs:us)){ const p=isU?toW(f,q):toW(q,f); if(ok(p[0],p[1])) run.push(p); else flush(); } flush(); }); };
+    grid(true); grid(false);
+    // buildings in each block
+    for(let i=0;i<us.length-1;i++) for(let j=0;j<vs.length-1;j++){
+      const u0=us[i]+15.5,u1=us[i+1]-15.5,v0=vs[j]+15.5,v1=vs[j+1]-15.5; const m=toW((u0+u1)/2,(v0+v1)/2);
+      if(!ok(m[0],m[1])) continue;
+      if(type==='campus'&&hash(i*17+j*3)<.35){ W.areas.push({kind:'Park',pts:rectPts(toW,u0,v0,u1,v1)}); scatterTrees(toW,u0,v0,u1,v1,14); continue; }
+      parcels(toW,ang,u0,v0,u1,v1,type,cx,cy,R);
+    }
+  } else {
+    // suburbs and woods: a loop road with curving streets off it, houses along both sides
+    const loop=[]; const lr=R*.45; for(let k=0;k<=48;k++){ const a=k/48*Math.PI*2; const rr2=lr*(1+.18*Math.sin(a*3+cx)); loop.push([cx+Math.cos(a)*rr2, cy+Math.sin(a)*rr2]); }
+    let run=[]; const flushL=()=>{ if(run.length>1) add({name:name+' Loop',cls:'street',pts:run}); run=[]; };
+    for(const p of loop){ if(onLand(p[0],p[1])&&!inCore(p[0],p[1],60)) run.push(p); else flushL(); } flushL();
+    const n=Math.round(R/90);
+    for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+rr(-.2,.2); let x=cx+Math.cos(a)*lr*(1+.18*Math.sin(a*3+cx)), y=cy+Math.sin(a)*lr*(1+.18*Math.sin(a*3+cx));
+      let h=a+(rand()<.5?0:Math.PI)+rr(-.5,.5); const pts=[];
+      const len=rr(R*.35,R*.8);
+      for(let d=0;d<len;d+=20){ if(!onLand(x,y)||inCore(x,y,60)) break; pts.push([x,y]); h+=rr(-.12,.12); x+=Math.cos(h)*20; y+=Math.sin(h)*20; }
+      if(pts.length>4) add({name:name+' '+pick(['Ct','Ln','Way','Dr','Cir','Pl']),cls:'street',pts}); }
+    // houses
+    const placed=[];
+    for(let r=t0;r<W.roads.length;r++){ const rd=W.roads[r]; const pts=rd.pts;
+      for(let k=0;k<pts.length-1;k++){ const [x0,y0]=pts[k],[x1,y1]=pts[k+1]; const L=Math.hypot(x1-x0,y1-y0); const tx=(x1-x0)/L, ty=(y1-y0)/L;
+        for(let d=8;d<L;d+=type==='woods'?46:30){ for(const side of [-1,1]){ const off=type==='woods'?24:19;
+          const x=x0+tx*d - ty*off*side, y=y0+ty*d + tx*off*side;
+          if(!onLand(x,y)||inCore(x,y,40)||placed.some(p=>Math.abs(p[0]-x)<17&&Math.abs(p[1]-y)<17)) continue;
+          if(rand()<.18) continue;
+          placed.push([x,y]);
+          const w=rr(10,15), dd=rr(10,14), hh=type==='woods'?rr(5,8):rr(6,10);
+          W.boxes.push({x,y,w,d:dd,h:hh,rot:Math.atan2(ty,tx),col:pick(type==='woods'?['#8a6f55','#6f5a48','#9b8466','#5e5a52']:['#d8d2c6','#c9b9a3','#e6e0d6','#b8b2a8','#d6c4a8','#a9b4bd']),kind:0,home:1});
+        } } } }
+    scatterForest(cx,cy,R,type==='woods'?1400:Math.round(R*.5),placed);
+  }
+  W.townAt=W.townAt||[]; W.townAt.push({name,cx,cy,r0:t0,r1:W.roads.length});
+}
+function townStreet(town,isU,i){ const base=town.split(' ').pop(); return isU ? `${base} ${ord(i+1)} Ave` : `${['North','Mill','Main','Church','Station','Market','School','Mesa','Ridge','Lake','Front','Water','Rail','Dock','Elm','High'][i%16]} St`; }
+function rectPts(toW,u0,v0,u1,v1){ return [toW(u0,v0),toW(u1,v0),toW(u1,v1),toW(u0,v1)].flat(); }
+function scatterTrees(toW,u0,v0,u1,v1,n){ for(let k=0;k<n;k++){ const p=toW(rr(u0,u1),rr(v0,v1)); W.trees.push({x:p[0],y:p[1],r:rr(2.5,5),h:rr(6,12)}); } }
+function scatterForest(cx,cy,R,n,avoid){ for(let k=0;k<n;k++){ const a=rand()*6.283, d=Math.sqrt(rand())*R*1.1; const x=cx+Math.cos(a)*d, y=cy+Math.sin(a)*d;
+  if(!onLand(x,y)||inCore(x,y,40)) continue; if(avoid.some(p=>Math.abs(p[0]-x)<10&&Math.abs(p[1]-y)<10)) continue; W.trees.push({x,y,r:rr(2.5,5.5),h:rr(7,16)}); } }
+function parcels(toW,ang,u0,v0,u1,v1,type,cx,cy,R){
+  const deep=v1-v0; const rows=deep>45?2:1; const rowD=deep/rows;
+  for(let rI=0;rI<rows;rI++){ let u=u0;
+    while(u<u1-6){ const w=Math.min(u1-u, type==='industrial'?rr(40,90):type==='desert'?rr(14,26):rr(16,32)); const vv0=v0+rI*rowD, vv1=vv0+rowD;
+      const m=toW(u+w/2,(vv0+vv1)/2);
+      if(rand()<(type==='desert'?.45:.1)||!onLand(m[0],m[1])){ u+=w; continue; }
+      const dc=Math.hypot(m[0]-cx,m[1]-cy)/R;
+      let h, col;
+      if(type==='industrial'){ h=rr(8,16); col=pick(['#7d858c','#8f969c','#6c7378','#9aa1a6','#7a6f63']); }
+      else if(type==='desert'||type==='oldtown'){ h=rr(4,10); col=pick(['#c9a27a','#b88b62','#d6b48c','#a8805e','#cdb79a']); }
+      else if(type==='campus'){ h=rr(12,28); col=pick(['#a0563f','#b46a50','#8f4f3c','#c9b9a3']); }
+      else { h=12+Math.pow(rand(),2)*80*(1-dc); col=pick(['#8d939b','#a7a29a','#6f7884','#b9b3a8','#5d6672','#9a8f84','#7d8a96']); }
+      W.boxes.push({x:m[0],y:m[1],w:w-2,d:rowD-2,h,rot:ang,col,kind:0}); u+=w; } }
+}
+function coreBlocks(AV,ST,avCls,stCls){
+  for(let i=0;i<AV.length-1;i++) for(let j=0;j<ST.length-1;j++){
+    const hw=c=>CLS[c].w/2+CLS[c].side;
+    const x0=AV[i]+hw(avCls(i)), x1=AV[i+1]-hw(avCls(i+1)), y0=ST[j]+hw(stCls(j)), y1=ST[j+1]-hw(stCls(j+1));
+    const cx=(x0+x1)/2, cy=(y0+y1)/2;
+    if(!onLand(cx,cy)) continue;
+    const dd=Math.hypot(cx-10000,cy-7450);
+    // the station, the mall, parks
+    if(Math.abs(cx-10000)<70&&Math.abs(cy-8000)<45){ W.boxes.push({x:cx,y:cy,w:x1-x0-4,d:y1-y0-4,h:26,rot:0,col:'#c9b48a',kind:0,name:'Downtown Central Station'}); continue; }
+    if(Math.hypot(cx-8600,cy-7300)<170){ addBox(cx,cy,x1-x0-6,y1-y0-6,24,'#b9b3a8','Mega Mall'); continue; }
+    const park = (cx>10440&&cx<10800&&cy>8480&&cy<8800) || hash(i*977+j*131)<.035;
+    if(park){ W.areas.push({kind:'Park',pts:[x0,y0,x1,y0,x1,y1,x0,y1]}); for(let k=0;k<22;k++) W.trees.push({x:rr(x0+4,x1-4),y:rr(y0+4,y1-4),r:rr(3,5.5),h:rr(7,13)}); continue; }
+    if(hash(i*31+j*1013)<.05){ W.areas.push({kind:'Plaza',pts:[x0,y0,x1,y0,x1,y1,x0,y1]}); continue; }
+    const alley = Math.hypot(cx-10000,ST[j]+40-7450)<1150;
+    const rows = alley ? [[y0, ST[j]+40-3-1],[ST[j]+40+3+1, y1]] : [[y0,(y0+y1)/2],[(y0+y1)/2,y1]];
+    for(const [ry0,ry1] of rows){ let x=x0;
+      while(x<x1-8){ const w=Math.min(x1-x, rr(14,34)); const px=x+w/2, py=(ry0+ry1)/2, pd=ry1-ry0;
+        x+=w; if(w<8) continue;
+        if(nearRoad(px,py,w/2,pd/2)) continue;
+        let h=rr(10,24);
+        if(dd<1450){ const k=1-dd/1450; h=14+Math.pow(rand(),1.7)*270*k*k+rr(0,18); }
+        else if(Math.hypot(px-11400,py-8100)<650) h=rr(16,60);
+        if(py>9050) h=Math.min(h,rr(9,30));
+        const glassy=h>90;
+        W.boxes.push({x:px,y:py,w:w-1.2,d:pd-1.2,h,rot:0,col:glassy?pick(['#4f6b85','#5b7690','#3f5a72','#6d8296']):pick(['#8d939b','#a7a29a','#6f7884','#b9b3a8','#5d6672','#9a8f84','#7d8a96','#a8927c']),kind:0});
+      } }
+    // street trees on the arterials
+  }
+  for(const r of W.roads){ if(r.cls!=='arterial'||!r.pts.every(p=>inCore(p[0],p[1]))) continue;
+    walk(r,15,(x,y,tx,ty)=>{ for(const s of [-1,1]){ const o=CLS.arterial.w/2+2.2; const px=x-ty*o*s, py=y+tx*o*s; if(onLand(px,py)) W.trees.push({x:px,y:py,r:rr(2,3),h:rr(6,9)}); } }); }
+}
+function addBox(x,y,w,d,h,col,name){ W.boxes.push({x,y,w,d,h,rot:0,col,kind:0,name}); }
+function walk(r,step,fn){ const p=r.pts; let acc=step/2; for(let k=0;k<p.length-1;k++){ const L=Math.hypot(p[k+1][0]-p[k][0],p[k+1][1]-p[k][1]); if(!L) continue; const tx=(p[k+1][0]-p[k][0])/L, ty=(p[k+1][1]-p[k][1])/L;
+  while(acc<L){ if(r.z[k]<.2&&!r.tun[k]) fn(p[k][0]+tx*acc,p[k][1]+ty*acc,tx,ty); acc+=step; } acc-=L; } }
+
+// Split crossing segments so every junction is a shared vertex (the route graph relies on it).
+function node(R){
+  const segs=[]; const C=120, cells=new Map();
+  R.forEach((r,ri)=>{ if(r.noNode) return; for(let k=0;k<r.pts.length-1;k++){ const a=r.pts[k],b=r.pts[k+1]; const s={ri,k,a,b,cuts:[]}; segs.push(s);
+    const x0=Math.floor(Math.min(a[0],b[0])/C),x1=Math.floor(Math.max(a[0],b[0])/C),y0=Math.floor(Math.min(a[1],b[1])/C),y1=Math.floor(Math.max(a[1],b[1])/C);
+    for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++){ const key=x*100000+y; (cells.get(key)||cells.set(key,[]).get(key)).push(s); } } });
+  const seen=new Set();
+  for(const list of cells.values()) for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++){
+    const s=list[i], t=list[j]; if(s.ri===t.ri&&Math.abs(s.k-t.k)<=1) continue;
+    const key=s.ri<t.ri||(s.ri===t.ri&&s.k<t.k)?`${s.ri},${s.k},${t.ri},${t.k}`:`${t.ri},${t.k},${s.ri},${s.k}`; if(seen.has(key)) continue; seen.add(key);
+    const r=[s.b[0]-s.a[0],s.b[1]-s.a[1]], q=[t.b[0]-t.a[0],t.b[1]-t.a[1]]; const den=r[0]*q[1]-r[1]*q[0]; if(Math.abs(den)<1e-9) continue;
+    const d=[t.a[0]-s.a[0],t.a[1]-s.a[1]]; const u=(d[0]*q[1]-d[1]*q[0])/den, v=(d[0]*r[1]-d[1]*r[0])/den;
+    const Ls=Math.hypot(...r), Lt=Math.hypot(...q); const eu=.3/Ls, ev=.3/Lt;
+    if(u<-eu||u>1+eu||v<-ev||v>1+ev) continue;
+    const uIn=u>eu&&u<1-eu, vIn=v>ev&&v<1-ev;
+    let P = !uIn ? (u<.5?s.a:s.b) : !vIn ? (v<.5?t.a:t.b) : [s.a[0]+r[0]*u, s.a[1]+r[1]*u];
+    if(uIn) s.cuts.push([u,P]); if(vIn) t.cuts.push([v,P]);
+  }
+  const byRoad=new Map(); for(const s of segs) if(s.cuts.length) (byRoad.get(s.ri)||byRoad.set(s.ri,[]).get(s.ri)).push(s);
+  for(const [ri,list] of byRoad){ const r=R[ri]; const cut=new Map(list.map(s=>[s.k,s.cuts.sort((a,b)=>a[0]-b[0])]));
+    const pts=[]; const put=q=>{ const l=pts[pts.length-1]; if(!l||Math.hypot(l[0]-q[0],l[1]-q[1])>.05) pts.push(q); };
+    for(let k=0;k<r.pts.length;k++){ put(r.pts[k]); const c=cut.get(k); if(c) for(const [,P] of c) put([P[0],P[1]]); }
+    r.pts=pts; r.z=pts.map(()=>0); r.tun=pts.map(()=>0); }
+}
+// Resample, then lift bridges over water and mark tunnels.
+function finishRoad(r){
+  if(r.ferry) return;
+  const step=r.cls==='trail'?18:20; const P=[],Z=[];
+  for(let k=0;k<r.pts.length-1;k++){ const a=r.pts[k],b=r.pts[k+1]; const L=Math.hypot(b[0]-a[0],b[1]-a[1]); const n=Math.max(1,Math.ceil(L/step));
+    for(let i=0;i<n;i++){ const t=i/n; P.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]); Z.push(r.z[k]+(r.z[k+1]-r.z[k])*t); } }
+  P.push(r.pts[r.pts.length-1]); Z.push(r.z[r.z.length-1]);
+  r.pts=P; r.z=Z; r.tun=P.map(()=>0);
+  // bridges
+  const wet=P.map(p=>inWater(p[0],p[1]));
+  if(wet.some(Boolean)){ r.bridge=true; const H=r.cls==='highway'?14:8;
+    const dist=P.map(()=>1e9); let acc=0, last=-1e9;
+    const cum=[0]; for(let k=1;k<P.length;k++) cum.push(cum[k-1]+Math.hypot(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]));
+    for(let k=0;k<P.length;k++){ if(wet[k]) last=cum[k]; dist[k]=Math.min(dist[k],cum[k]-last); }
+    last=1e12; for(let k=P.length-1;k>=0;k--){ if(wet[k]) last=cum[k]; dist[k]=Math.min(dist[k],last-cum[k]); }
+    for(let k=0;k<P.length;k++){ const lift=H*(1-smooth(dist[k]/90)); r.z[k]=Math.max(r.z[k],lift); } }
+  if(r.tunnelFrac){ const cum=[0]; for(let k=1;k<P.length;k++) cum.push(cum[k-1]+Math.hypot(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1])); const T=cum[cum.length-1];
+    for(let k=0;k<P.length;k++){ const f=cum[k]/T; if(f>r.tunnelFrac[0]&&f<r.tunnelFrac[1]) r.tun[k]=1; } r.tunnel=true; }
+  // Central Station underpass
+  for(let k=0;k<P.length;k++) if(Math.abs(P[k][0]-9960)<1&&P[k][1]>7895&&P[k][1]<8105){ r.tun[k]=1; r.tunnel=true; }
+}
+// Give every dead end that stops near another road a short connector, so routes reach everything.
+function connectEnds(add){
+  const keyOf=p=>Math.round(p[0]*2)+','+Math.round(p[1]*2);
+  const deg=new Map(); for(const r of W.roads){ if(r.ferry) continue; r.pts.forEach((p,k)=>{ const kk=keyOf(p); deg.set(kk,(deg.get(kk)||0)+((k===0||k===r.pts.length-1)?1:2)); }); }
+  const nodes=[]; for(const r of W.roads){ if(r.ferry||r.cls==='trail') continue; r.pts.forEach((p,k)=>{ if(r.z[k]<.2&&!r.tun[k]) nodes.push([p,r]); }); }
+  const C=200, grid=new Map(); nodes.forEach(n=>{ const k=Math.floor(n[0][0]/C)+','+Math.floor(n[0][1]/C); (grid.get(k)||grid.set(k,[]).get(k)).push(n); });
+  const extra=[];
+  for(const r of W.roads){ if(r.ferry||r.cls==='trail'||r.noNode) continue; for(const end of [0,r.pts.length-1]){ const p=r.pts[end]; if(deg.get(keyOf(p))!==1) continue;
+    let best=null,bd=r.cls==='highway'||r.cls==='road'?400:160;
+    const gx=Math.floor(p[0]/C),gy=Math.floor(p[1]/C);
+    for(let x=gx-2;x<=gx+2;x++) for(let y=gy-2;y<=gy+2;y++) for(const n of grid.get(x+','+y)||[]){ if(n[1]===r) continue; const d=Math.hypot(n[0][0]-p[0],n[0][1]-p[1]); if(d<bd&&d>.5){bd=d;best=n[0];} }
+    if(best&&!inWater((p[0]+best[0])/2,(p[1]+best[1])/2)) extra.push({name:r.name,cls:r.cls==='highway'?'road':r.cls,pts:[p,best]}); } }
+  // every town gets a road to the nearest highway
+  for(const t of W.townAt||[]){ let best=null,bd=1e9, tn=null, td=1e9;
+    for(const r of W.roads){ if(r.cls!=='highway'&&r.cls!=='road') continue; if(r.noNode) continue; r.pts.forEach((p,k)=>{ if(r.z[k]>.2||r.tun[k]) return; const d=Math.hypot(p[0]-t.cx,p[1]-t.cy); if(d<bd){bd=d;best=p;} }); }
+    for(let i=t.r0;i<t.r1;i++) for(const p of W.roads[i].pts){ const d=best?Math.hypot(p[0]-best[0],p[1]-best[1]):1e9; if(d<td){td=d;tn=p;} }
+    if(best&&tn&&td>2&&td<3500){ const pts=[tn]; const n=Math.ceil(td/20); for(let k=1;k<n;k++){ const f=k/n; pts.push([tn[0]+(best[0]-tn[0])*f+Math.sin(f*Math.PI)*td*.06, tn[1]+(best[1]-tn[1])*f]); } pts.push(best);
+      extra.push({name:t.name+' Rd',cls:'road',pts}); } }
+  for(const e of extra){ const o=add({...e,noNode:true}); finishRoad(o); }
+}
+let ROADIDX=null;
+function indexRoads(){ const C=60; ROADIDX={C,m:new Map()}; W.roads.forEach((r,ri)=>{ for(let k=0;k<r.pts.length-1;k++){ const a=r.pts[k],b=r.pts[k+1];
+  const x0=Math.floor((Math.min(a[0],b[0])-30)/C),x1=Math.floor((Math.max(a[0],b[0])+30)/C),y0=Math.floor((Math.min(a[1],b[1])-30)/C),y1=Math.floor((Math.max(a[1],b[1])+30)/C);
+  for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++){ const kk=x*100000+y; (ROADIDX.m.get(kk)||ROADIDX.m.set(kk,[]).get(kk)).push([ri,k]); } } }); }
+function segDist(px,py,a,b){ const dx=b[0]-a[0],dy=b[1]-a[1]; const L2=dx*dx+dy*dy||1; let t=((px-a[0])*dx+(py-a[1])*dy)/L2; t=Math.max(0,Math.min(1,t)); return [Math.hypot(px-a[0]-dx*t,py-a[1]-dy*t),t]; }
+function nearestRoad(x,y,maxD){ if(!ROADIDX) return null; const C=ROADIDX.C; let best=null,bd=maxD;
+  for(const [ri,k] of ROADIDX.m.get(Math.floor(x/C)*100000+Math.floor(y/C))||[]){ const r=W.roads[ri]; const [d,t]=segDist(x,y,r.pts[k],r.pts[k+1]); const hw=CLS[r.cls].w/2+CLS[r.cls].side; if(d-hw<bd){ bd=d-hw; best={r,k,t,d}; } }
+  return best; }
+function nearRoad(x,y,hx,hy){ for(const [px,py] of [[x,y],[x-hx,y-hy],[x+hx,y-hy],[x+hx,y+hy],[x-hx,y+hy],[x,y-hy],[x,y+hy],[x-hx,y],[x+hx,y]]){ const n=nearestRoad(px,py,-.5); if(n&&!(n.r.cls==='alley')) return true; } return false; }
+function crossings(AV,ST){ const set=new Set(AV); const keyOf=p=>Math.round(p[0])+','+Math.round(p[1]);
+  const at=new Map(); for(const r of W.roads){ if(r.cls!=='street'&&r.cls!=='arterial') continue; r.pts.forEach((p,k)=>{ if(!inCore(p[0],p[1])||r.z[k]>.2||r.tun[k]) return; const kk=keyOf(p); (at.get(kk)||at.set(kk,[]).get(kk)).push([r,k]); }); }
+  for(const [kk,list] of at){ if(list.length<2) continue; const roads=new Set(list.map(l=>l[0])); if(roads.size<2) continue;
+    for(const [r,k] of list){ const p=r.pts[k]; for(const dir of [-1,1]){ const q=r.pts[k+dir]; if(!q) continue; const L=Math.hypot(q[0]-p[0],q[1]-p[1]); const tx=(q[0]-p[0])/L, ty=(q[1]-p[1])/L;
+      const other=[...roads].find(o=>o!==r); const off=CLS[other.cls].w/2+CLS[other.cls].side*.5+1.8;
+      W.crossings.push({x:p[0]+tx*off,y:p[1]+ty*off,tx,ty,w:CLS[r.cls].w}); } } }
+}
+
+// ============================================================ renderer
+const canvas=document.getElementById('c');
+let renderer;
+try { renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }
+catch(e){ const er=document.getElementById('err'); er.style.display='grid'; er.textContent='This browser could not start WebGL, so the 3D map cannot draw here.'; throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setClearColor(0x000000,0);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(30,1,1,100000);
+const U={uTime:{value:0},uRise:{value:0},uMode:{value:0},uFog:{value:new THREE.Color('#3a5670')},uFogR:{value:new THREE.Vector2(1e5,2e5)},
+  uMpp:{value:1},uRiseC:{value:new THREE.Vector2(10000,8000)},uRiseR:{value:3000},uSun:{value:new THREE.Vector3(.45,.8,.35).normalize()}};
+const col=c=>new THREE.Color(c);
+
+const FLAT_VS=`
+attribute float aElev; attribute vec2 aOff; attribute float aW;
+uniform float uRise,uMpp,uMinPx,uScaleBoost; varying vec2 vUv; varying float vDist; varying float vW; varying vec3 vWorld;
+void main(){ vec3 p=position; float s=max(1.0, uMinPx*uMpp/max(aW,0.01))*uScaleBoost; p.xz+=aOff*s; p.y+=aElev*uRise; vUv=uv; vW=aW*s; vWorld=p;
+  vec4 mv=modelViewMatrix*vec4(p,1.); vDist=-mv.z; gl_Position=projectionMatrix*mv; }`;
+const FLAT_FS=`
+uniform vec3 uC2,uC3,uFog; uniform vec2 uFogR; uniform float uMode,uOpacity,uDashOn,uDashOff,uFlow,uTime,uStripe,uSoft;
+varying vec2 vUv; varying float vDist; varying float vW;
+void main(){
+  if(uDashOn>0.){ float per=uDashOn+uDashOff; float t=mod(vUv.x-uTime*uFlow,per); if(t>uDashOn) discard; }
+  float a=uOpacity;
+  if(uStripe>0.){ float s=fract((vUv.y*vW)/uStripe); if(s>.55) discard; }
+  float fw=fwidth(vUv.y)*1.2; a*=1.-smoothstep(1.-fw-uSoft-.001,1.,abs(vUv.y));
+  vec3 c=mix(uC2,uC3,uMode); float f=smoothstep(uFogR.x,uFogR.y,vDist)*uMode; c=mix(c,uFog,f*.85);
+  gl_FragColor=vec4(c,a); }`;
+function flatMat(o){
+  const m=new THREE.ShaderMaterial({uniforms:{...U,uC2:{value:col(o.c2)},uC3:{value:col(o.c3??o.c2)},uOpacity:{value:o.op??1},uDashOn:{value:o.dash?o.dash[0]:0},uDashOff:{value:o.dash?o.dash[1]:0},
+    uFlow:{value:o.flow||0},uMinPx:{value:o.min||0},uScaleBoost:{value:1},uStripe:{value:o.stripe||0},uSoft:{value:o.soft||0}},vertexShader:FLAT_VS,fragmentShader:FLAT_FS,
+    transparent:true,depthWrite:!!o.dw,depthTest:o.dt!==false,side:THREE.DoubleSide});
+  if(o.po!==undefined){ m.polygonOffset=true; m.polygonOffsetFactor=o.po; m.polygonOffsetUnits=o.po*4; }
+  return m;
+}
+const WATER_FS=`
+uniform vec3 uFog; uniform vec2 uFogR; uniform float uMode,uTime,uOpacity,uMpp; varying vec3 vWorld; varying float vDist;
+float n2(vec2 p){ return sin(p.x)*sin(p.y); }
+void main(){ vec2 p=vWorld.xz;
+  float w=(n2(p*.05+vec2(uTime*.6,uTime*.4))*.5*(1.-smoothstep(.4,1.5,uMpp))+n2(p*.013-vec2(uTime*.2,0.))*.5*(1.-smoothstep(1.5,6.,uMpp)))*(1.-smoothstep(4.,30.,vDist/max(uFogR.x,1.)));
+  vec3 c2=vec3(.059,.18,.267)+w*.012; vec3 c3=mix(vec3(.06,.17,.25),vec3(.13,.29,.38),.5+.5*w);
+  vec3 c=mix(c2,c3,uMode); float f=smoothstep(uFogR.x,uFogR.y,vDist)*uMode; c=mix(c,uFog,f*.9); gl_FragColor=vec4(c,uOpacity); }`;
+const LOT_FS=`
+uniform vec3 uFog; uniform vec2 uFogR; uniform float uMode,uMpp; varying vec3 vWorld; varying float vDist;
+void main(){ vec2 g=abs(fract(vWorld.xz/20.)-.5); float d=min(g.x,g.y)*20.; float px=max(uMpp,.05);
+  float line=1.-smoothstep(px*.6,px*1.6,d); float vis=1.-smoothstep(1.2,3.5,uMpp);
+  vec3 c=mix(vec3(1.),vec3(1.,.82,.25),.35); gl_FragColor=vec4(c, .05+.22*line*vis); }`;
+function shaderMat(fs,extra={},o={}){ return new THREE.ShaderMaterial({uniforms:{...U,uC2:{value:col('#000')},uC3:{value:col('#000')},uOpacity:{value:o.op??1},uDashOn:{value:0},uDashOff:{value:0},uFlow:{value:0},uMinPx:{value:0},uScaleBoost:{value:1},uStripe:{value:0},uSoft:{value:0},...extra},
+  vertexShader:FLAT_VS,fragmentShader:fs,transparent:o.transparent!==false,depthWrite:!!o.dw,side:THREE.DoubleSide}); }
+
+// ribbons / polygons into one buffer per layer
+class Buf{ constructor(){ this.p=[];this.e=[];this.o=[];this.w=[];this.uv=[];this.ix=[];this.n=0; }
+  ribbon(pts0,z0,hw,lat=0,y=0,u0=0){ const pts=[],z=z0?[]:null; pts0.forEach((p,k)=>{ const l=pts[pts.length-1]; if(l&&Math.hypot(l[0]-p[0],l[1]-p[1])<.05) return; pts.push(p); if(z) z.push(z0[k]); });
+    const n=pts.length; if(n<2) return; let u=u0; const base=this.n;
+    for(let k=0;k<n;k++){ const a=pts[Math.max(0,k-1)], b=pts[k], c=pts[Math.min(n-1,k+1)];
+      let t1x=b[0]-a[0],t1y=b[1]-a[1],t2x=c[0]-b[0],t2y=c[1]-b[1]; let l1=Math.hypot(t1x,t1y)||1,l2=Math.hypot(t2x,t2y)||1;
+      if(k===0){t1x=t2x;t1y=t2y;l1=l2;} if(k===n-1){t2x=t1x;t2y=t1y;l2=l1;}
+      t1x/=l1;t1y/=l1;t2x/=l2;t2y/=l2; let tx=t1x+t2x,ty=t1y+t2y; const tl=Math.hypot(tx,ty)||1; tx/=tl;ty/=tl;
+      const nx=-ty, ny=tx; const miter=Math.min(2.5,1/Math.max(.2,(nx*-t1y+ny*t1x)));
+      if(k>0) u+=Math.hypot(b[0]-a[0],b[1]-a[1]);
+      const cx=b[0]+nx*lat*miter, cy=b[1]+ny*lat*miter;
+      for(const s of [-1,1]){ this.p.push(cx,y,cy); this.e.push(z?z[k]:0); this.o.push(nx*hw*miter*s, ny*hw*miter*s); this.w.push(hw); this.uv.push(u,s); }
+      if(k>0){ const i=base+k*2; this.ix.push(i-2,i-1,i, i-1,i+1,i); } }
+    this.n+=n*2; }
+  poly(flat,y=0,elev=0){ const pts=[]; for(let i=0;i<flat.length;i+=2) pts.push(new THREE.Vector2(flat[i],flat[i+1]));
+    const tris=THREE.ShapeUtils.triangulateShape(pts,[]); const base=this.n;
+    for(const v of pts){ this.p.push(v.x,y,v.y); this.e.push(elev); this.o.push(0,0); this.w.push(1); this.uv.push(0,0); }
+    for(const t of tris) this.ix.push(base+t[0],base+t[1],base+t[2]); this.n+=pts.length; }
+  quad(x,y,tx,ty,len,hw,yy=0){ const nx=-ty, ny=tx; const base=this.n;
+    for(const [d,s] of [[-len/2,-1],[-len/2,1],[len/2,-1],[len/2,1]]){ this.p.push(x+tx*d,yy,y+ty*d); this.e.push(0); this.o.push(nx*hw*s,ny*hw*s); this.w.push(hw); this.uv.push(d,s); }
+    this.ix.push(base,base+1,base+2,base+1,base+3,base+2); this.n+=4; }
+  mesh(mat,order){ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(this.p,3)); g.setAttribute('aElev',new THREE.Float32BufferAttribute(this.e,1));
+    g.setAttribute('aOff',new THREE.Float32BufferAttribute(this.o,2)); g.setAttribute('aW',new THREE.Float32BufferAttribute(this.w,1)); g.setAttribute('uv',new THREE.Float32BufferAttribute(this.uv,2));
+    g.setIndex(this.n>65535?new THREE.Uint32BufferAttribute(this.ix,1):new THREE.Uint16BufferAttribute(this.ix,1));
+    const m=new THREE.Mesh(g,mat); m.renderOrder=order; m.frustumCulled=false; return m; } }
+
+// instanced boxes (buildings, pillars, trees, cars, player builds) with one lit shader
+const BOX_VS=`
+attribute vec3 aColor; attribute float aKind; attribute float aBorn; attribute float aState;
+uniform float uRise,uTime,uRiseR; uniform vec2 uRiseC;
+varying vec3 vN,vW,vC; varying float vKind,vH,vDist,vState,vAge;
+void main(){
+  #ifdef USE_INSTANCING
+  mat4 M=instanceMatrix;
+  #else
+  mat4 M=mat4(1.);
+  #endif
+  vec4 base=M*vec4(0.,0.,0.,1.);
+  float delay=clamp(length(base.xz-uRiseC)/uRiseR,0.,1.)*.45;
+  float r=clamp((uRise-delay)/.55,0.,1.); r=r*r*(3.-2.*r);
+  vAge=uTime-aBorn;
+  if(aKind>2.5&&aKind<3.5){ float g=clamp(vAge/1.6,0.,1.); r*=1.-pow(1.-g,3.); }
+  vec4 w=M*vec4(position,1.); vW=w.xyz; vH=(M*vec4(0.,1.,0.,1.)).y;
+  w.y=w.y*r; if(aKind!=1.) w.y=max(w.y,position.y*.45);
+  vN=normalize(mat3(M)*normal); vC=aColor; vKind=aKind; vState=aState;
+  vec4 mv=viewMatrix*w; vDist=-mv.z; gl_Position=projectionMatrix*mv; }`;
+const BOX_FS=`
+uniform float uMode,uTime; uniform vec3 uFog,uSun; uniform vec2 uFogR;
+varying vec3 vN,vW,vC; varying float vKind,vH,vDist,vState,vAge;
+float h21(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
+void main(){
+  vec3 n=normalize(vN); float l=.5+.5*max(dot(n,uSun),0.); float sky=.5+.5*n.y;
+  vec3 c3=vC*(.42+.62*l)*(.86+.14*sky);
+  vec3 c2=mix(vec3(.17,.19,.22),vec3(.29,.33,.39),clamp(vH/150.,0.,1.));
+  if(vKind<.5&&abs(n.y)<.5){
+    float along=abs(n.x)>abs(n.z)?vW.z:vW.x; float fl=fract(vW.y/3.6); float cl=fract(along/3.1);
+    float win=step(.3,fl)*step(fl,.82)*step(.14,cl)*step(cl,.86)*step(4.2,vW.y);
+    float lit=h21(floor(vec2(along/3.1,vW.y/3.6))+vC.xy*91.);
+    vec3 glass=mix(vec3(.09,.12,.17),vec3(.33,.43,.55),clamp(vW.y/220.,0.,1.)+.25*max(dot(n,uSun),0.));
+    if(lit>.88) glass=vec3(1.,.8,.48)*.85;
+    c3=mix(c3,glass,win*.82);
+  }
+  if(n.y>.5&&vKind<.5) c3=vC*.78+.04;
+  if(vKind>.5&&vKind<1.5){ c2=vec3(.2); }
+  if(vKind>1.5&&vKind<2.5){ c3=vC*(.45+.55*l); c2=vec3(.11,.24,.15); }
+  if(vKind>2.5&&vKind<3.5){
+    vec3 sc=vC; float pulse=.5+.5*sin(uTime*4.);
+    if(vState<.5){ float st=step(.5,fract((vW.x+vW.z+vW.y)/2.5-uTime*.6)); sc=mix(vec3(1.,.62,.11),vec3(.12,.1,.08),st*.65); }
+    else if(vState<1.5){ sc=vC; }
+    else if(vState<2.5){ sc=mix(vC,vec3(1.,.82,.25),.45+.45*pulse); }
+    else { sc=mix(vec3(.75,.08,.08),vec3(1.,.3,.25),pulse); }
+    float fresh=1.-smoothstep(0.,8.,vAge);
+    c3=sc*(.55+.5*l)+fresh*.35*vec3(1.,.9,.6); c2=sc+fresh*.3;
+  }
+  if(vKind>3.5){ c3=vC*(.5+.5*l); c2=vC*.9; }
+  vec3 c=mix(c2,c3,uMode); float f=smoothstep(uFogR.x,uFogR.y,vDist)*uMode; c=mix(c,uFog,f*.85);
+  gl_FragColor=vec4(c,1.); }`;
+const boxMat=new THREE.ShaderMaterial({uniforms:U,vertexShader:BOX_VS,fragmentShader:BOX_FS});
+function instanced(geo,list,kind,cap){ const n=cap||list.length; const m=new THREE.InstancedMesh(geo.clone(),boxMat,Math.max(1,n));
+  const C=new Float32Array(n*3),K=new Float32Array(n).fill(kind),B=new Float32Array(n).fill(-100),S=new Float32Array(n);
+  m.geometry.setAttribute('aColor',new THREE.InstancedBufferAttribute(C,3)); m.geometry.setAttribute('aKind',new THREE.InstancedBufferAttribute(K,1));
+  m.geometry.setAttribute('aBorn',new THREE.InstancedBufferAttribute(B,1)); m.geometry.setAttribute('aState',new THREE.InstancedBufferAttribute(S,1));
+  m.frustumCulled=false; m.count=list.length; const d=new THREE.Object3D(); const cc=new THREE.Color();
+  list.forEach((b,i)=>{ d.position.set(b.x,b.y0||0,b.y); d.rotation.set(0,-(b.rot||0),0); d.scale.set(b.w,b.h,b.d); d.updateMatrix(); m.setMatrixAt(i,d.matrix); cc.set(b.col); C[i*3]=cc.r;C[i*3+1]=cc.g;C[i*3+2]=cc.b; });
+  m.instanceMatrix.needsUpdate=true; return m; }
+const BOXG=new THREE.BoxGeometry(1,1,1).translate(0,.5,0);
+const TREEG=new THREE.IcosahedronGeometry(.5,1).translate(0,.5,0);
+
+// ============================================================ scene build
+let worldGroup=null, graph=null, buildMesh=null, carMesh=null, cars=[], roadLabels=[];
+function buildScene(){
+  if(worldGroup){ scene.remove(worldGroup); worldGroup.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); }
+  worldGroup=new THREE.Group(); scene.add(worldGroup);
+  const G=worldGroup;
+  // ocean
+  const ocean=new Buf(); ocean.poly([-60000,-60000,80000,-60000,80000,80000,-60000,80000],-.6); const om=ocean.mesh(shaderMat(WATER_FS,{}, {transparent:false,dw:false}),-1); om.material.depthTest=false; G.add(om);
+  const land=new Buf(); for(const a of A.Land) land.poly(a.pts,-.3); G.add(land.mesh(flatMat({c2:STYLE.land,c3:'#555c4c'}),1));
+  // county tint + borders
+  for(const c of A.County){ const b=new Buf(); b.poly(c.pts,0); G.add(b.mesh(flatMat({c2:STYLE.countyLand[c.style],c3:mixHex(STYLE.countyLand[c.style],'#646b58',.8),op:.9}),2));
+    const e=new Buf(); e.ribbon(ring2(c.pts),null,3,0,0); G.add(e.mesh(flatMat({c2:STYLE.county[c.style],c3:STYLE.county[c.style],op:.55,min:.7,dash:[60,40]}),3)); }
+  // shoreline glow
+  const sh=new Buf(); for(const a of A.Land) sh.ribbon(ring2(a.pts),null,12,0,0); G.add(sh.mesh(flatMat({c2:'#1d4660',c3:'#c9c0a4',op:.9,min:1,soft:.6}),3));
+  const wb=new Buf(); for(const a of A.Water) wb.poly(a.pts,0); G.add(wb.mesh(shaderMat(WATER_FS),4));
+  const lots=new Buf(); for(const a of A.LotZone) lots.poly(a.pts,0); G.add(lots.mesh(shaderMat(LOT_FS),5));
+  const parks=new Buf(), plaza=new Buf(); for(const a of W.areas){ if(a.kind==='Park') parks.poly(a.pts,0); else if(a.kind==='Plaza'||a.kind==='Sidewalk') plaza.poly(a.pts,0); }
+  G.add(parks.mesh(flatMat({c2:STYLE.park,c3:'#3f6a3c'}),6)); G.add(plaza.mesh(flatMat({c2:'#2c333b',c3:'#a7a59e'}),6));
+  const surf=new Buf(); for(const a of W.areas) if(a.kind==='RoadSurface') surf.poly(a.pts,0); G.add(surf.mesh(flatMat({c2:'#4A4F57',c3:'#3a3e43'}),7));
+
+  // roads: split each into ground / elevated / tunnel runs
+  const L={}; const get=(k)=>L[k]||(L[k]=new Buf());
+  for(const r of W.roads){ const c=CLS[r.cls]; if(!c) continue;
+    if(r.ferry){ get('ferry').ribbon(r.pts,null,c.w/2); continue; }
+    let cat=null, run=[], rz=[];
+    const flush=()=>{ if(run.length>1) emitRun(get,r,c,cat,run,rz); run=[];rz=[]; };
+    for(let k=0;k<r.pts.length-1;k++){
+      const tc = r.tun[k]&&r.tun[k+1] ? 't' : (Math.max(r.z[k],r.z[k+1])>.15 ? 'e' : 'g');
+      if(tc!==cat){ const lastP=run[run.length-1], lastZ=rz[rz.length-1]; flush(); cat=tc; if(lastP){} }
+      if(!run.length){ run.push(r.pts[k]); rz.push(r.z[k]); }
+      run.push(r.pts[k+1]); rz.push(r.z[k+1]);
+    } flush(); }
+  const O={g:10,e:30};
+  const add=(key,mat,order)=>{ if(L[key]&&L[key].n){ const m=L[key].mesh(mat,order); if(/_(yellow|white|dash)$/.test(key)) m.userData.mark=1; G.add(m); } };
+  for(const lv of ['g','e']){ const b=O[lv], dw=lv==='e';
+    add(lv+'_shadow',flatMat({c2:'#000000',c3:'#000000',op:.35,soft:.8}),b-1);
+    const po=v=>dw?v:undefined;
+    add(lv+'_side',flatMat({c2:'#2a3139',c3:'#9a9a94',dw,po:po(3)}),b);
+    add(lv+'_case',flatMat({c2:'#0b0f14',c3:lv==='e'?'#c3c4c0':'#77756f',dw,min:.4,po:po(2)}),b+1);
+    for(const k of ['highway','road','arterial','street','alley','path','trail','rail']){ const c=CLS[k];
+      add(lv+'_'+k,flatMat({c2:c.c2,c3:c.c3,dw,min:c.min,po:po(0),dash:k==='trail'?[5,3]:k==='path'?[3,2]:null}),b+2+(k==='highway'?3:k==='road'?2:k==='arterial'?1:0)); }
+    add(lv+'_yellow',flatMat({c2:'#d9b648',c3:'#e3be3a',dw,po:po(-2)}),b+8);
+    add(lv+'_white',flatMat({c2:'#e8ecef',c3:'#e9ebe6',dw,po:po(-2)}),b+8);
+    add(lv+'_dash',flatMat({c2:'#e8ecef',c3:'#e9ebe6',dw,po:po(-2),dash:[3,6]}),b+8);
+  }
+  add('t_case',flatMat({c2:'#FFC94A',c3:'#ffd77a',op:.75,dash:[14,10],min:.6}),20);
+  add('t_road',flatMat({c2:'#5a5f66',c3:'#2a2d31',op:.4,min:.8}),19);
+  add('ferry',flatMat({c2:'#FFC94A',c3:'#ffd77a',op:.85,dash:[30,22],min:.8,flow:6}),21);
+  const cw=new Buf(); for(const x of W.crossings) cw.quad(x.x,x.y,x.tx,x.ty,3.2,x.w/2-.6); const cwm=cw.mesh(flatMat({c2:'#cfd5db',c3:'#e9ebe6',stripe:1.4,op:.95}),18.5); cwm.userData.mark=.95; G.add(cwm);
+  markMeshes=G.children.filter(m=>m.userData.mark);
+
+  // pillars under elevated decks
+  const pil=[]; for(const r of W.roads){ if(r.ferry) continue; walkAll(r,36,(x,y,z,tx,ty)=>{ if(z<3) return; const wet=inWater(x,y); const n=CLS[r.cls].w>15?[-.3,.3]:[0];
+    for(const o of n){ const off=o*CLS[r.cls].w; pil.push({x:x-ty*off,y:y+tx*off,w:wet?3:1.8,d:wet?3:1.8,h:z-.4,rot:Math.atan2(ty,tx),col:'#9a9fa6'}); } }); }
+  const bm=instanced(BOXG,W.boxes.filter(b=>b.kind===0),0); bm.renderOrder=2; G.add(bm);
+  G.add(instanced(BOXG,pil,1));
+  G.add(instanced(TREEG,W.trees.map(t=>({x:t.x,y:t.y,w:t.r*2,d:t.r*2,h:t.h,col:pick(['#3f6b3a','#4b7a40','#35603a','#557f45'])})),2));
+  buildMesh=instanced(BOXG,[],3,4000); G.add(buildMesh); refreshBuilds();
+  // traffic
+  cars=[]; const drivable=W.roads.filter(r=>!r.ferry&&(r.cls==='highway'||r.cls==='arterial'||r.cls==='street'||r.cls==='road')&&!r.tunnel);
+  const cum=r=>{ if(r.cum) return r.cum; const c=[0]; for(let k=1;k<r.pts.length;k++) c.push(c[k-1]+Math.hypot(r.pts[k][0]-r.pts[k-1][0],r.pts[k][1]-r.pts[k-1][1])); r.cum=c; return c; };
+  const weight=drivable.map(r=>cum(r)[r.pts.length-1]*(r.cls==='highway'?2:1)*(inCore(r.pts[0][0],r.pts[0][1])?3:1)); const tot=weight.reduce((a,b)=>a+b,0);
+  for(let i=0;i<1400;i++){ let x=rand()*tot,k=0; while(x>weight[k]&&k<weight.length-1){x-=weight[k];k++;} const r=drivable[k]; const len=r.cum[r.cum.length-1];
+    cars.push({r,s:rand()*len,len,v:(r.cls==='highway'?rr(20,30):rr(8,15))*(rand()<.5?1:-1),lane:rr(.55,.9),col:pick(['#e8e8e8','#1d1f22','#a3a7ad','#b0302a','#2c4f8a','#d6c28a','#f2f2f2','#3b3f45','#7d1f1f','#e0a020'])}); }
+  carMesh=instanced(BOXG,cars.map(c=>({x:0,y:0,w:4.4,d:1.9,h:1.5,col:c.col})),4); G.add(carMesh);
+  graph=buildGraph();
+  makeRoadLabels();
+}
+let markMeshes=[];
+function emitRun(get,r,c,cat,run,rz){
+  const hw=c.w/2;
+  if(cat==='t'){ get('t_road').ribbon(run,null,hw); get('t_case').ribbon(run,null,.9,hw+.4); get('t_case').ribbon(run,null,.9,-hw-.4); return; }
+  const lv=cat; const z=rz;
+  if(lv==='e') get('e_shadow').ribbon(run.map(p=>[p[0]+6,p[1]+9]),null,hw+2);
+  const lift=lv==='e'?1:0;
+  if(c.side) get(lv+'_side').ribbon(run,z,hw+c.side,0,0);
+  if(r.cls!=='trail'&&r.cls!=='path') get(lv+'_case').ribbon(run,z,hw+(lv==='e'?1.2:.9),0,.04*lift);
+  get(lv+'_'+r.cls).ribbon(run,z,hw,0,.12*lift);
+  // lane markings
+  const mk=(key,off,w)=>get(lv+'_'+key).ribbon(run,z,w,off,.2*lift);
+  if(r.cls==='highway'){ mk('yellow',.45,.15); mk('yellow',-.45,.15); for(const s of [-1,1]){ mk('dash',s*4.3,.12); mk('dash',s*8.1,.12); mk('white',s*(hw-.7),.13); } }
+  else if(r.cls==='arterial'){ mk('yellow',.3,.12); mk('yellow',-.3,.12); for(const s of [-1,1]) mk('dash',s*4.8,.12); }
+  else if(r.cls==='street'){ mk('dash',0,.12); }
+  else if(r.cls==='road'){ mk('dash',0,.12); for(const s of [-1,1]) mk('white',s*(hw-.5),.12); }
+}
+function walkAll(r,step,fn){ const p=r.pts; let acc=step/2; for(let k=0;k<p.length-1;k++){ const L=Math.hypot(p[k+1][0]-p[k][0],p[k+1][1]-p[k][1]); if(!L) continue; const tx=(p[k+1][0]-p[k][0])/L, ty=(p[k+1][1]-p[k][1])/L;
+  while(acc<L){ const t=acc/L; fn(p[k][0]+tx*acc,p[k][1]+ty*acc,r.z[k]+(r.z[k+1]-r.z[k])*t,tx,ty); acc+=step; } acc-=L; } }
+function ring2(flat){ const p=[]; for(let i=0;i<flat.length;i+=2) p.push([flat[i],flat[i+1]]); p.push([flat[0],flat[1]]); return p; }
+function mixHex(a,b,t){ return '#'+col(a).lerp(col(b),t).getHexString(); }
+
+// ============================================================ routing
+function buildGraph(){ const N=new Map(), key=p=>Math.round(p[0]*2)+','+Math.round(p[1]*2);
+  const node=(p,z)=>{ const k=key(p); let n=N.get(k); if(!n){ n={k,x:p[0],y:p[1],z,e:[]}; N.set(k,n); } return n; };
+  for(const r of W.roads){ if(r.cls==='trail') continue; for(let k=0;k<r.pts.length-1;k++){ const a=node(r.pts[k],r.z[k]), b=node(r.pts[k+1],r.z[k+1]); if(a===b) continue;
+    const L=Math.hypot(b.x-a.x,b.y-a.y)*(r.ferry?2.5:1)/(r.cls==='highway'?1.6:r.cls==='alley'?.6:1); a.e.push([b,L,r]); b.e.push([a,L,r]); } }
+  const list=[...N.values()]; const C=150, grid=new Map(); for(const n of list){ const k=Math.floor(n.x/C)+','+Math.floor(n.y/C); (grid.get(k)||grid.set(k,[]).get(k)).push(n); }
+  return {N,list,grid,C}; }
+function nearestNode(x,y){ const {grid,C}=graph; let best=null,bd=1e18; for(let rad=0;rad<12&&!best;rad++){ const gx=Math.floor(x/C),gy=Math.floor(y/C);
+  for(let i=gx-rad;i<=gx+rad;i++) for(let j=gy-rad;j<=gy+rad;j++){ if(Math.max(Math.abs(i-gx),Math.abs(j-gy))!==rad) continue; for(const n of grid.get(i+','+j)||[]){ if(!n.e.length) continue; const d=(n.x-x)**2+(n.y-y)**2; if(d<bd){bd=d;best=n;} } } } return best; }
+function route(a,b){ const came=new Map(), g=new Map([[a.k,0]]); const heap=[]; const closed=new Set();
+  const push=(n,f)=>{ heap.push([f,n]); let i=heap.length-1; while(i>0){ const p=(i-1)>>1; if(heap[p][0]<=heap[i][0]) break; [heap[p],heap[i]]=[heap[i],heap[p]]; i=p; } };
+  const pop=()=>{ const top=heap[0], lastE=heap.pop(); if(heap.length){ heap[0]=lastE; let i=0; for(;;){ const l=2*i+1, r=l+1; let m=i; if(l<heap.length&&heap[l][0]<heap[m][0]) m=l; if(r<heap.length&&heap[r][0]<heap[m][0]) m=r; if(m===i) break; [heap[m],heap[i]]=[heap[i],heap[m]]; i=m; } } return top[1]; };
+  const h=n=>Math.hypot(n.x-b.x,n.y-b.y)/1.6; push(a,0);
+  while(heap.length){ const cur=pop();
+    if(cur===b){ const path=[cur]; let k=cur.k; while(came.has(k)){ const p=came.get(k); path.push(p); k=p.k; } return path.reverse(); }
+    if(closed.has(cur.k)) continue; closed.add(cur.k);
+    for(const [nb,L] of cur.e){ const ng=g.get(cur.k)+L; if(ng<(g.get(nb.k)??1e18)){ g.set(nb.k,ng); came.set(nb.k,cur); push(nb,ng+h(nb)); } }
+    if(closed.size>250000) break; }
+  return null; }
+
+// ============================================================ builds (simulated live feed)
+const OWNERS=['BlazeRunner','HazeQueen','LatoFan22','CloudNine','GreenThumb','OutskirtsOG','PalmKeyPete','DesertRose','TerpTrader','KushKid','SmokeSignal','JadeLeaf','NightOwl','MangoHaze','BigAlStan','RidgeRider'];
+const USES=[['Home','House'],['Home','Cabin'],['Shop','Corner shop'],['Venue','Lounge'],['Grow','Grow house'],['Attraction','Studio'],['Shop','Garage']];
+const STATES=['Under construction','Completed','For sale','Raided'];
+const builds=[]; let bseq=0;
+function lotSpot(){ const z=pick(A.LotZone); for(let t=0;t<40;t++){ const x=Math.round(rr(z.bb[0],z.bb[2])/20)*20+10, y=Math.round(rr(z.bb[1],z.bb[3])/20)*20+10;
+  if(pip(x,y,z.pts)&&onLand(x,y)&&!builds.some(b=>Math.abs(b.x-x)<19&&Math.abs(b.y-y)<19)) return {x,y,zone:z.name}; } return null; }
+function newBuild(t,fresh){ const s=lotSpot(); if(!s) return null; const [use,kind]=pick(USES); const owner=pick(OWNERS);
+  const b={id:++bseq,x:s.x,y:s.y,zone:s.zone,w:rr(11,17),d:rr(11,17),h:use==='Home'?rr(6,10):rr(7,13),use,kind,owner,state:fresh?0:(rand()<.8?1:rand()<.6?2:3),born:fresh?t:-100,label:`${owner}'s ${kind.toLowerCase()}`};
+  builds.push(b); return b; }
+function refreshBuilds(){ if(!buildMesh) return; const d=new THREE.Object3D(), cc=new THREE.Color(); const C=buildMesh.geometry.attributes.aColor, B=buildMesh.geometry.attributes.aBorn, S=buildMesh.geometry.attributes.aState;
+  const live=builds.filter(b=>b.state!==4); live.forEach((b,i)=>{ d.position.set(b.x,0,b.y); d.rotation.set(0,0,0); d.scale.set(b.w,b.h,b.d); d.updateMatrix(); buildMesh.setMatrixAt(i,d.matrix);
+    cc.set(STYLE.uses[b.use]); C.setXYZ(i,cc.r,cc.g,cc.b); B.setX(i,b.born); S.setX(i,b.state); });
+  buildMesh.count=live.length; buildMesh.instanceMatrix.needsUpdate=true; C.needsUpdate=B.needsUpdate=S.needsUpdate=true;
+  document.getElementById('count').textContent=`LIVE · ${live.length.toLocaleString()} player builds`; }
+const ripples=[]; const ringGeo=new THREE.RingGeometry(.86,1,64).rotateX(-Math.PI/2);
+function ripple(x,y,c){ const m=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:c,transparent:true,depthTest:false,depthWrite:false})); m.position.set(x,.5,y); m.renderOrder=50; scene.add(m); ripples.push({m,t:0}); }
+const feedEl=document.getElementById('feed');
+function feed(b,verb){ const li=document.createElement('li'); li.innerHTML=`<b>${esc(b.owner)}</b> ${verb} ${esc(b.kind.toLowerCase())} · ${esc(b.zone)}`; li.onclick=()=>{ flyTo(b.x,b.y,140); };
+  feedEl.prepend(li); while(feedEl.children.length>5) feedEl.lastChild.remove(); }
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function tickBuilds(t){ const r=rand(); let b, verb;
+  if(r<.62||builds.length<10){ b=newBuild(t,true); verb='started a'; }
+  else { b=pick(builds.filter(x=>x.state!==4)); if(!b) return; const nx=b.state===0?1:b.state===1?(rand()<.5?2:3):b.state===2?(rand()<.5?1:4):1; b.state=nx; b.born=t;
+    verb=nx===1?'finished a':nx===2?'listed a':nx===3?'got raided at a':'demolished a'; }
+  if(!b) return; ripple(b.x,b.y,b.state===3?'#FF4D4D':b.state===2?'#FFD23F':'#FFFFFF'); feed(b,verb); refreshBuilds(); }
+
+// ============================================================ labels
+const labelsEl=document.getElementById('labels'); let LBL=[];
+function makeLabels(){ labelsEl.textContent=''; LBL=[];
+  const addL=(text,x,y,cls,pri,minH,maxH,color,icon)=>{ const el=document.createElement('div'); el.className='lb '+cls; if(icon){ const i=document.createElement('i'); i.style.background=icon; el.appendChild(i); }
+    el.appendChild(document.createTextNode(text)); if(color) el.style.color=color; el.style.display='none'; labelsEl.appendChild(el); LBL.push({el,x,y,z:0,pri,minH,maxH,w:0,h:0,shown:false}); };
+  for(const l of LAYOUT.labels){
+    if(l.kind==='County') addL(l.text,l.x,l.y,'county',5,1800,1e9,STYLE.county[l.style]);
+    else if(l.kind==='District') addL(l.text,l.x,l.y,'district',4,350,7000);
+    else if(l.kind==='Water') addL(l.text,l.x,l.y,'water',2,500,12000);
+    else if(l.kind==='Place') addL(l.text,l.x,l.y,'place'+(l.icon==='start'?' start':''),l.icon==='start'?6:3,0,l.icon==='start'?1e9:2800,null,STYLE.icons[l.icon]||'#fff');
+    else if(l.kind==='Landmark') addL(l.text,l.x,l.y,'place',1,0,1100,null,STYLE.icons[l.icon]||'#fff');
+  }
+  for(const r of roadLabels){ addL(r.text,r.x,r.y,'road',0,0,420,null,null); Object.assign(LBL[LBL.length-1],{z:r.z,tx:r.tx,ty:r.ty,road:true}); }
+  LBL.sort((a,b)=>b.pri-a.pri);
+}
+function makeRoadLabels(){ roadLabels=[]; const seen=new Map();
+  for(const r of W.roads){ if(r.ferry||!r.name||r.name==='Alley'||r.name==='Trail'||r.name.includes('spur')||r.name==='Loop ramp') continue;
+    walkAll(r,r.cls==='highway'?900:480,(x,y,z,tx,ty)=>{ const k=r.name; const prev=seen.get(k)||[]; if(prev.some(p=>Math.hypot(p[0]-x,p[1]-y)<380)) return; prev.push([x,y]); seen.set(k,prev);
+      roadLabels.push({text:r.name,x,y,z,tx,ty}); }); }
+  makeLabels(); }
+
+// ============================================================ camera + view state
+const V={x:10000,y:7900,H:2600,tH:2600,yaw:-.35,pitch3:50,mode:0,mT:0,follow:true};
+const FOV2=28, FOV3=48;
+function camSetup(){ const e=ease(V.mode); const fov=FOV2+(FOV3-FOV2)*e; camera.fov=fov;
+  const pitch=(89.6+(V.pitch3-89.6)*e)*Math.PI/180; const yaw=V.yaw*e;
+  const dist=V.H/Math.tan(fov*Math.PI/360);
+  const ch=Math.cos(pitch)*dist; camera.position.set(V.x+Math.sin(yaw)*ch, Math.sin(pitch)*dist, V.y+Math.cos(yaw)*ch);
+  camera.up.set(0,1,0); camera.lookAt(V.x,0,V.y);
+  camera.near=Math.max(.5,dist*.01); camera.far=dist*6+40000*e+8000; camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  U.uMode.value=e; U.uMpp.value=(2*V.H)/innerHeight;
+  U.uFogR.value.set(dist*1.4,dist*1.4+Math.max(9000,dist*5));
+  return dist; }
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+function ground(sx,sy){ ndc.set(sx/innerWidth*2-1,-(sy/innerHeight)*2+1); ray.setFromCamera(ndc,camera); const d=ray.ray.direction,o=ray.ray.origin; if(d.y>-1e-4) return null; const t=-o.y/d.y; return [o.x+d.x*t,o.z+d.z*t]; }
+function resize(){ renderer.setSize(innerWidth,innerHeight,false); }
+addEventListener('resize',resize);
+
+// ============================================================ input
+const pointers=new Map(); let drag=null, vel=[0,0], lastMove=0, pressT=0, longTimer=null;
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{ canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId,[e.clientX,e.clientY]); vel=[0,0];
+  if(pointers.size===1){ const rot=(e.button===2||e.shiftKey)&&V.mT>.5; drag={rot,btn:e.button,sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,moved:false,g:ground(e.clientX,e.clientY)};
+    canvas.classList.add('drag'); if(e.pointerType==='touch'){ clearTimeout(longTimer); longTimer=setTimeout(()=>{ if(drag&&!drag.moved){ setWaypointAt(e.clientX,e.clientY); drag=null; } },650); } }
+  else { clearTimeout(longTimer); drag=null; pinch=pinchState(); } });
+let pinch=null;
+function pinchState(){ const p=[...pointers.values()]; return {d:Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]),a:Math.atan2(p[1][1]-p[0][1],p[1][0]-p[0][0]),cx:(p[0][0]+p[1][0])/2,cy:(p[0][1]+p[1][1])/2,H:V.tH,yaw:V.yaw}; }
+canvas.addEventListener('pointermove',e=>{ if(pointers.has(e.pointerId)) pointers.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pinch&&pointers.size>=2){ const s=pinchState(); V.tH=V.H=clampH(pinch.H*pinch.d/Math.max(10,s.d)); if(V.mT>.5) V.yaw=pinch.yaw-(s.a-pinch.a); V.follow=false; return; }
+  if(drag){ const dx=e.clientX-drag.lx, dy=e.clientY-drag.ly; if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>4) drag.moved=true;
+    if(drag.rot){ V.yaw-=dx*.005; V.pitch3=Math.max(28,Math.min(84,V.pitch3+dy*.15)); }
+    else if(drag.g){ camSetup(); const g=ground(e.clientX,e.clientY); if(g){ const ddx=drag.g[0]-g[0], ddy=drag.g[1]-g[1]; V.x+=ddx; V.y+=ddy; const now=performance.now(); const dt=Math.max(1,now-lastMove); vel=[ddx/dt*16,ddy/dt*16]; lastMove=now; V.follow=false; } }
+    drag.lx=e.clientX; drag.ly=e.clientY; dirty=true; }
+  else hoverAt(e.clientX,e.clientY); });
+const endP=e=>{ pointers.delete(e.pointerId); clearTimeout(longTimer); if(pointers.size<2) pinch=null;
+  if(drag){ if(!drag.moved&&drag.btn===2) setWaypointAt(e.clientX,e.clientY); if(performance.now()-lastMove>80) vel=[0,0]; drag=null; canvas.classList.remove('drag'); } };
+canvas.addEventListener('pointerup',endP); canvas.addEventListener('pointercancel',endP);
+canvas.addEventListener('pointerleave',()=>{ card.style.display='none'; });
+const clampH=h=>Math.max(60,Math.min(16000,h));
+let zoomAnchor=null;
+canvas.addEventListener('wheel',e=>{ e.preventDefault(); const f=Math.exp(e.deltaY*(e.deltaMode?0.05:0.0016)); V.tH=clampH(V.tH*f); zoomAnchor=[e.clientX,e.clientY]; V.follow=false; },{passive:false});
+canvas.addEventListener('dblclick',e=>{ V.tH=clampH(V.tH*.45); zoomAnchor=[e.clientX,e.clientY]; V.follow=false; });
+const keys=new Set();
+addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; const k=e.key.toLowerCase();
+  if(k==='t') setMode(V.mT<.5?1:0); else if(k==='l') toggleLegend(); else if(k==='f') follow(); else if(k==='n') V.yaw=0;
+  else if(k==='+'||k==='=') V.tH=clampH(V.tH*.6); else if(k==='-') V.tH=clampH(V.tH/.6); else if(k==='escape') clearRoute();
+  else keys.add(k); });
+addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+
+// ============================================================ HUD
+const $=id=>document.getElementById(id); const card=$('card');
+function setMode(m){ V.mT=m; document.body.classList.toggle('is3d',m>.5); $('b2d').setAttribute('aria-pressed',m<.5); $('b3d').setAttribute('aria-pressed',m>.5);
+  U.uRiseC.value.set(V.x,V.y); U.uRiseR.value=Math.max(600,V.H*2.2); toast(m>.5?'3D view':'2D map'); }
+$('b2d').onclick=()=>setMode(0); $('b3d').onclick=()=>setMode(1);
+$('zin').onclick=()=>{ V.tH=clampH(V.tH*.55); zoomAnchor=null; }; $('zout').onclick=()=>{ V.tH=clampH(V.tH/.55); zoomAnchor=null; };
+$('compass').onclick=()=>{ V.yaw=0; }; $('me').onclick=()=>follow(); $('leg').onclick=()=>toggleLegend();
+$('infoX').onclick=()=>$('info').remove();
+$('load').onclick=()=>$('file').click(); $('file').onchange=e=>{ const f=e.target.files[0]; if(f) readPack(f); };
+function follow(){ V.follow=true; toast('Following you'); }
+let toastT=0; function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),1600); }
+function toggleLegend(){ const el=$('legend'); el.hidden=!el.hidden; }
+function legend(){ const sw=(c,t,ex='')=>`<div><span class="sw" style="background:${c};${ex}"></span>${t}</div>`, bx=(c,t,ex='')=>`<div><span class="bx" style="background:${c};${ex}"></span>${t}</div>`, dot=(c,t)=>`<div><span class="dot" style="background:${c}"></span>${t}</div>`;
+  $('legend').innerHTML=`<b>ROADS</b>${sw('#FFC94A','Highway and the Loop')}${sw('#F2F4F7','Avenue')}${sw('#C5CCD4','Street')}${sw('#8E97A1','Alley')}${sw('#E6C47A','Country road')}${sw('repeating-linear-gradient(90deg,#C9A876 0 5px,transparent 5px 8px)','Trail')}
+  ${sw('#C5CCD4','Bridge or overpass','box-shadow:0 0 0 2px #0b0f14,3px 3px 0 2px rgba(0,0,0,.5)')}${sw('repeating-linear-gradient(90deg,#FFC94A 0 7px,transparent 7px 12px)','Tunnel')}${sw('repeating-linear-gradient(90deg,#FFC94A 0 9px,transparent 9px 15px)','Ferry')}
+  <b>PLAYER BUILDS</b>${bx('repeating-linear-gradient(45deg,#FF9F1C 0 4px,#2a2016 4px 8px)','Under construction')}${bx('#45C6EC','Completed (color = use)')}${bx('#FFD23F','For sale (plot fee lapsed)')}${bx('#D9312A','Raided')}${bx('rgba(255,255,255,.12)','Lot zone, 20 m grid','outline:1px dashed rgba(255,210,63,.6)')}
+  <b>PLACES</b>${dot(STYLE.icons.start,'You start here')}${dot(STYLE.icons.prison,'Prison')}${dot(STYLE.icons.jail,'Jail')}${dot(STYLE.icons.shop,'Shop or job')}${dot(STYLE.icons.home,'Homes')}${dot(STYLE.icons.lounge,'Lounge')}${dot(STYLE.icons.disp,'Dispensary')}
+  <b>SOURCE</b><div style="color:var(--muted);max-width:200px" id="srcTxt">${W.src==='generated'?'Generated stand-in streets':'Surveyed: '+esc(W.src)}</div>`; }
+
+// hover card
+let hoverT=0;
+function hoverAt(sx,sy){ const now=performance.now(); if(now-hoverT<40) return; hoverT=now; const g=ground(sx,sy); if(!g){ card.style.display='none'; return; }
+  let html=null;
+  const b=builds.find(b=>b.state!==4&&Math.abs(b.x-g[0])<b.w/2+2&&Math.abs(b.y-g[1])<b.d/2+2);
+  if(b) html=`<b>${esc(b.label)}</b><span>${esc(b.use)} · ${STATES[b.state]} · ${esc(b.zone)}</span>`;
+  if(!html){ const n=nearestRoad(g[0],g[1],Math.max(3,U.uMpp.value*6)); if(n){ const r=n.r; const z=r.z[n.k]; const flags=[r.tun[n.k]?'tunnel':'', z>.5?(inWater(g[0],g[1])?'bridge':'overpass'):''].filter(Boolean).join(', ');
+    const c=countyAt(g[0],g[1]); html=`<b>${esc(r.name||CLS[r.cls].name)}</b><span>${CLS[r.cls].name}${flags?' · '+flags:''}${c?' · '+esc(c.name):''}</span>`; } }
+  if(!html){ const c=countyAt(g[0],g[1]); if(c&&V.H>900) html=`<b>${esc(c.name)}</b>`; }
+  if(html){ card.innerHTML=html; card.style.display='block'; card.style.left=Math.min(innerWidth-250,sx+14)+'px'; card.style.top=(sy+14)+'px'; } else card.style.display='none'; }
+
+// waypoint + route
+const player={x:10000,y:8040,z:0,h:0,path:null,s:0};
+let routeMesh=null, wpMesh=null, routeLen=0;
+function setWaypointAt(sx,sy){ const g=ground(sx,sy); if(!g) return; if(wpMesh&&Math.hypot(wpMesh.userData.x-g[0],wpMesh.userData.y-g[1])<V.H*.03){ clearRoute(); return; } planRoute(g[0],g[1]); }
+function planRoute(x,y){ const a=nearestNode(player.x,player.y), b=nearestNode(x,y); if(!a||!b){ toast('No road near there'); return; }
+  const p=route(a,b); if(!p||p.length<2){ toast('No route there'); return; }
+  const pts=[[player.x,player.y],...p.map(n=>[n.x,n.y])], z=[player.z,...p.map(n=>n.z)];
+  if(routeMesh){ scene.remove(routeMesh); routeMesh.geometry.dispose(); }
+  const rb=new Buf(); rb.ribbon(pts,z,3.2,0,.6); routeMesh=rb.mesh(flatMat({c2:'#C77DFF',c3:'#d9a3ff',min:3.2,dash:[18,8],flow:22,dt:false}),60); scene.add(routeMesh);
+  if(!wpMesh){ wpMesh=new THREE.Group(); const ringM=new THREE.Mesh(new THREE.RingGeometry(.6,1,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#C77DFF',transparent:true,depthTest:false}));
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,1,12,1,true).translate(0,.5,0),new THREE.MeshBasicMaterial({color:'#C77DFF',transparent:true,opacity:.55,depthWrite:false}));
+    wpMesh.add(ringM,beam); wpMesh.userData.beam=beam; ringM.renderOrder=61; scene.add(wpMesh); }
+  wpMesh.position.set(b.x,b.z+.6,b.y); wpMesh.userData.x=b.x; wpMesh.userData.y=b.y;
+  routeLen=0; for(let i=1;i<pts.length;i++) routeLen+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+  player.path={pts,z,cum:pts.reduce((a,p,i)=>{ a.push(i?a[i-1]+Math.hypot(p[0]-pts[i-1][0],p[1]-pts[i-1][1]):0); return a; },[])}; player.s=0;
+  $('route').classList.add('on'); updRouteTxt(); toast('Waypoint set'); }
+function updRouteTxt(){ const left=player.path?routeLen-player.s:0; $('routeTxt').textContent=`Waypoint · ${(left/1000).toFixed(1)} km · ${Math.max(1,Math.round(left/14/60))} min drive`; }
+function clearRoute(){ if(routeMesh){ scene.remove(routeMesh); routeMesh=null; } if(wpMesh){ scene.remove(wpMesh); wpMesh=null; } player.path=null; $('route').classList.remove('on'); }
+$('routeX').onclick=clearRoute;
+// player marker
+const me=new THREE.Group(); { const s=new THREE.Shape(); s.moveTo(0,-1.2); s.lineTo(.85,.9); s.lineTo(0,.45); s.lineTo(-.85,.9); s.closePath();
+  const arrow=new THREE.Mesh(new THREE.ShapeGeometry(s).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({color:'#FFD23F',depthTest:false,side:THREE.DoubleSide}));
+  const halo=new THREE.Mesh(new THREE.CircleGeometry(1.6,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#FFD23F',transparent:true,opacity:.18,depthTest:false}));
+  const pulse=new THREE.Mesh(new THREE.RingGeometry(.9,1,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#FFD23F',transparent:true,depthTest:false}));
+  arrow.renderOrder=72; halo.renderOrder=70; pulse.renderOrder=71; me.add(halo,pulse,arrow); me.userData={arrow,pulse}; scene.add(me); }
+
+// ============================================================ survey pack loader
+function readPack(f){ const rd=new FileReader(); rd.onload=()=>{ try{ loadPack(JSON.parse(rd.result), f.name); } catch(err){ toast('That file is not a map pack: '+err.message); } }; rd.readAsText(f); }
+function loadPack(P,name){
+  if(P.format!=='puffers-map-pack') throw new Error('format is not puffers-map-pack');
+  const world=P.space!=='map'; const tx=(x,y)=>world?[ORIGIN[0]+x/100,ORIGIN[1]+y/100]:[x,y];
+  const roads=[], areas=[]; let bb=[1e9,1e9,-1e9,-1e9];
+  const map={Highway:'highway',Arterial:'arterial',Street:'street',Alley:'alley',Path:'path',Trail:'trail',Rail:'rail',Ferry:'ferry',Planned:'highway'};
+  for(const r of P.roads||[]){ const dim=r.dim||2; const pts=[],z=[]; for(let i=0;i<r.pts.length;i+=dim){ const p=tx(r.pts[i],r.pts[i+1]); pts.push(p); z.push(0); bb=[Math.min(bb[0],p[0]),Math.min(bb[1],p[1]),Math.max(bb[2],p[0]),Math.max(bb[3],p[1])]; }
+    const fl=r.flags||[]; const o={name:r.name||'',cls:map[r.class]||'street',pts,z,tun:pts.map(()=>fl.includes('Tunnel')?1:0),src:'pack',noNode:true};
+    if(fl.includes('Bridge')||fl.includes('Overpass')) o.z=pts.map((_,k)=>{ const e=Math.min(k,pts.length-1-k); return 8*smooth(e/3); });
+    if(o.cls==='ferry') o.ferry=true; if(fl.includes('Tunnel')) o.tunnel=true; roads.push(o); }
+  for(const a of P.areas||[]){ const pts=[]; for(let i=0;i<a.pts.length;i+=2) pts.push(...tx(a.pts[i],a.pts[i+1])); areas.push({kind:a.kind,pts,h:a.height?(world?a.height/100:a.height):0}); }
+  if(!roads.length&&!areas.length) throw new Error('it has no roads or areas');
+  const inside=(x,y)=>inBB(x,y,bb,30);
+  W.roads=W.roads.filter(r=>!r.pts.some(p=>inside(p[0],p[1]))).concat(roads);
+  W.boxes=W.boxes.filter(b=>!inside(b.x,b.y)); W.trees=W.trees.filter(t=>!inside(t.x,t.y)); W.crossings=W.crossings.filter(c=>!inside(c.x,c.y));
+  W.areas=W.areas.filter(a=>!inside(a.pts[0],a.pts[1])).concat(areas.filter(a=>a.kind!=='Building'));
+  for(const a of areas) if(a.kind==='Building'){ const b=bboxOf(a.pts); W.boxes.push({x:(b[0]+b[2])/2,y:(b[1]+b[3])/2,w:b[2]-b[0],d:b[3]-b[1],h:a.h>.5?a.h:14,rot:0,col:'#8d939b',kind:0}); }
+  W.src=name; indexRoads(); buildScene(); legend(); clearRoute();
+  $('info')&&($('info').innerHTML=`<b>Showing surveyed roads from ${esc(name)}.</b> ${roads.length.toLocaleString()} roads and ${areas.length.toLocaleString()} areas replaced the stand-in inside that level's bounds.`);
+  flyTo((bb[0]+bb[2])/2,(bb[1]+bb[3])/2,Math.max(400,(bb[3]-bb[1])*.6)); toast('Map pack loaded'); }
+addEventListener('dragover',e=>{ e.preventDefault(); $('drop').classList.add('on'); });
+addEventListener('dragleave',e=>{ if(!e.relatedTarget) $('drop').classList.remove('on'); });
+addEventListener('drop',e=>{ e.preventDefault(); $('drop').classList.remove('on'); const f=e.dataTransfer.files[0]; if(f) readPack(f); });
+
+// ============================================================ main loop
+let fly=null; function flyTo(x,y,H){ fly={x0:V.x,y0:V.y,H0:V.H,x,y,H:clampH(H),t:0}; V.follow=false; }
+let dirty=true, last=performance.now(), simT=0, nextBuild=2;
+const pv=new THREE.Vector3();
+function frame(now){ const dt=Math.min(.05,(now-last)/1000); last=now; simT+=dt; U.uTime.value=simT;
+  // 2D <-> 3D blend
+  const tgt=V.mT; if(V.mode!==tgt){ const sp=dt/1.25; V.mode=V.mode<tgt?Math.min(tgt,V.mode+sp):Math.max(tgt,V.mode-sp); }
+  U.uRise.value=Math.min(1,Math.max(0,(V.mode-.08)/.92)*1.0);
+  if(V.mode===0) V.yaw=V.yaw*(1-Math.min(1,dt*6));
+  // zoom toward target, anchored under the cursor
+  if(Math.abs(V.H-V.tH)>.01){ let before=zoomAnchor?ground(...zoomAnchor):null; V.H=Math.exp(Math.log(V.H)+(Math.log(V.tH)-Math.log(V.H))*(1-Math.exp(-dt*11))); camSetup();
+    if(before&&!V.follow){ const after=ground(...zoomAnchor); if(after){ V.x+=before[0]-after[0]; V.y+=before[1]-after[1]; } } }
+  if(fly){ fly.t=Math.min(1,fly.t+dt/1.4); const e=ease(fly.t); V.x=fly.x0+(fly.x-fly.x0)*e; V.y=fly.y0+(fly.y-fly.y0)*e; const arc=Math.sin(fly.t*Math.PI)*Math.max(0,Math.hypot(fly.x-fly.x0,fly.y-fly.y0)*.25);
+    V.H=V.tH=Math.exp(Math.log(fly.H0)+(Math.log(fly.H)-Math.log(fly.H0))*e)+arc; if(fly.t>=1){ V.tH=V.H=fly.H; fly=null; } }
+  if(!drag&&(Math.abs(vel[0])+Math.abs(vel[1])>.01)){ V.x+=vel[0]; V.y+=vel[1]; vel[0]*=Math.exp(-dt*5); vel[1]*=Math.exp(-dt*5); }
+  const kp=[(keys.has('d')||keys.has('arrowright'))-(keys.has('a')||keys.has('arrowleft')),(keys.has('s')||keys.has('arrowdown'))-(keys.has('w')||keys.has('arrowup'))];
+  if(kp[0]||kp[1]){ const y=V.yaw*ease(V.mode); const c=Math.cos(y),s=Math.sin(y); V.x+=(kp[0]*c+kp[1]*s)*V.H*dt*.9; V.y+=(-kp[0]*s+kp[1]*c)*V.H*dt*.9; V.follow=false; }
+  if(keys.has('q')) V.yaw+=dt*1.2; if(keys.has('e')) V.yaw-=dt*1.2;
+  // player drives the route
+  if(player.path){ const P=player.path; player.s=Math.min(routeLen,player.s+dt*28); let i=1; while(i<P.cum.length-1&&P.cum[i]<player.s) i++; const t=(player.s-P.cum[i-1])/Math.max(.01,P.cum[i]-P.cum[i-1]);
+    const a=P.pts[i-1],b=P.pts[i]; player.x=a[0]+(b[0]-a[0])*t; player.y=a[1]+(b[1]-a[1])*t; player.z=P.z[i-1]+(P.z[i]-P.z[i-1])*t; player.h=Math.atan2(b[1]-a[1],b[0]-a[0]);
+    if(player.s>=routeLen){ toast('You have arrived'); clearRoute(); } else if(Math.round(simT*4)%4===0) updRouteTxt(); }
+  if(V.follow){ const k=1-Math.exp(-dt*4); V.x+=(player.x-V.x)*k; V.y+=(player.y-V.y)*k; }
+  V.x=Math.max(-2000,Math.min(24000,V.x)); V.y=Math.max(-2000,Math.min(18000,V.y));
+  const dist=camSetup();
+  // marker scale follows zoom
+  const sc=V.H*.028; me.position.set(player.x,player.z*U.uRise.value+.8,player.y); me.scale.setScalar(sc); me.userData.arrow.rotation.y=-player.h-Math.PI/2;
+  const pt=(simT%1.8)/1.8; me.userData.pulse.scale.setScalar(1+pt*2.2); me.userData.pulse.material.opacity=(1-pt)*.8;
+  if(wpMesh){ wpMesh.children[0].scale.setScalar(sc*1.4*(1+.15*Math.sin(simT*4))); const beam=wpMesh.userData.beam; beam.scale.set(sc*.6,Math.max(.01,V.H*.25*U.uMode.value),sc*.6); }
+  // markings fade with distance
+  const markA=1-Math.min(1,Math.max(0,(V.H-320)/500));
+  for(const m of markMeshes){ m.material.uniforms.uOpacity.value=markA*m.userData.mark; m.visible=markA>.01; }
+  // traffic
+  const showCars=V.H<2200; carMesh.visible=showCars;
+  if(showCars){ const d=new THREE.Object3D(); for(let i=0;i<cars.length;i++){ const c=cars[i]; c.s+=c.v*dt; if(c.s>c.len) c.s-=c.len; if(c.s<0) c.s+=c.len; const r=c.r, cum=r.cum;
+    let lo=0,hi=cum.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(cum[m]<c.s) lo=m; else hi=m; } const t=(c.s-cum[lo])/Math.max(.01,cum[hi]-cum[lo]);
+    const a=r.pts[lo],b=r.pts[hi]; let tx=b[0]-a[0],ty=b[1]-a[1]; const L=Math.hypot(tx,ty)||1; tx/=L;ty/=L; const side=Math.sign(c.v)*CLS[r.cls].w*.25*c.lane*1.6;
+    const x=a[0]+(b[0]-a[0])*t - ty*side, y=a[1]+(b[1]-a[1])*t + tx*side, z=(r.z[lo]+(r.z[hi]-r.z[lo])*t)*U.uRise.value;
+    d.position.set(x,z+.1,y); d.rotation.set(0,-Math.atan2(ty,tx),0); d.scale.set(4.4,1.5,1.9); d.updateMatrix(); carMesh.setMatrixAt(i,d.matrix); }
+    carMesh.instanceMatrix.needsUpdate=true; }
+  // ripples
+  for(let i=ripples.length-1;i>=0;i--){ const r=ripples[i]; r.t+=dt/2.2; const s=10+r.t*Math.max(80,V.H*.08); r.m.scale.setScalar(s); r.m.material.opacity=Math.max(0,1-r.t); if(r.t>=1){ scene.remove(r.m); r.m.material.dispose(); ripples.splice(i,1); } }
+  // live feed
+  nextBuild-=dt; if(nextBuild<=0){ tickBuilds(simT); nextBuild=rr(2.2,5.5); }
+  // compass + where
+  $('compass').firstChild.style.transform=`rotate(${V.yaw*ease(V.mode)}rad)`;
+  if(Math.round(simT*5)!==Math.round((simT-dt)*5)) updWhere();
+  renderer.render(scene,camera);
+  placeLabels();
+  requestAnimationFrame(frame); }
+function updWhere(){ const x=V.follow?player.x:V.x, y=V.follow?player.y:V.y; const n=nearestRoad(x,y,40); const c=countyAt(x,y);
+  $('where').textContent=[n?(n.r.name||CLS[n.r.cls].name):null, c?c.name:(onLand(x,y)?null:'Open water')].filter(Boolean).join(' · ')||'Puffington'; }
+const placed=[];
+function placeLabels(){ placed.length=0; const W2=innerWidth, H2=innerHeight; const e=U.uRise.value;
+  const order=LBL;
+  for(const l of order){ let show=V.H>=l.minH&&V.H<=l.maxH;
+    if(show){ pv.set(l.x,(l.z||0)*e+1,l.y).project(camera); if(pv.z>1||pv.x<-1.1||pv.x>1.1||pv.y<-1.1||pv.y>1.1) show=false; }
+    let sx=0,sy=0; if(show){ sx=(pv.x+1)/2*W2; sy=(1-pv.y)/2*H2; if(!l.w){ l.el.style.display='block'; l.w=l.el.offsetWidth; l.h=l.el.offsetHeight; }
+      const bx=[sx-l.w/2-3,sy-l.h/2-2,sx+l.w/2+3,sy+l.h/2+2]; if(placed.some(p=>p.pri>=l.pri&&!(bx[2]<p.b[0]||bx[0]>p.b[2]||bx[3]<p.b[1]||bx[1]>p.b[3]))) show=false; else placed.push({b:bx,pri:l.pri}); }
+    if(show!==l.shown){ l.el.style.display=show?'block':'none'; l.shown=show; }
+    if(show){ const rot=l.road?` rotate(${roadAngle(l).toFixed(3)}rad)`:''; l.el.style.transform=`translate(${(sx-l.w/2).toFixed(1)}px,${(sy-l.h/2).toFixed(1)}px)${rot}`; } }
+}
+const pv2=new THREE.Vector3();
+function roadAngle(l){ pv.set(l.x,0,l.y).project(camera); pv2.set(l.x+l.tx*20,0,l.y+l.ty*20).project(camera);
+  let a=Math.atan2(-(pv2.y-pv.y)*innerHeight,(pv2.x-pv.x)*innerWidth); if(a>Math.PI/2) a-=Math.PI; if(a<-Math.PI/2) a+=Math.PI; return a; }
+
+// ============================================================ boot
+generate();
+for(let i=0;i<170;i++) newBuild(0,false);
+resize(); buildScene(); legend(); camSetup(); updWhere();
+requestAnimationFrame(frame);
+V.H=7000; V.tH=1100;
+window.puffMap={flyTo,setMode,planRoute,V};
+</script>
+</body>
+</html>

@@ -100,8 +100,19 @@ bool SPuffersMapView::FProjector::ToScreen(const FVector2D& P, FVector2D& Out, f
 {
 	if (!b3D)
 	{
-		Out = ScreenCenter + (P - Center) * Zoom;
-		return true;
+		const FVector2D D = P - Center;
+		if (TiltRad <= 1e-4)
+		{
+			Out = ScreenCenter + D * Zoom;
+			return true;
+		}
+		// Perspective view of the map plane tipped back (north recedes), camera CamDistM away from the center.
+		const double Sn = FMath::Sin(TiltRad), Cs = FMath::Cos(TiltRad);
+		const double Depth = CamDistM - D.Y * Sn - ZMeters * Cs;
+		const double MinDepth = CamDistM * 0.02;
+		const double K = CamDistM / FMath::Max(Depth, MinDepth);
+		Out = ScreenCenter + FVector2D(D.X * K, (D.Y * Cs - ZMeters * Sn) * K) * Zoom;
+		return Depth > MinDepth;
 	}
 	APlayerController* Controller = PC.Get();
 	UPuffersMapSubsystem* M = Map.Get();
@@ -122,7 +133,17 @@ FVector2D SPuffersMapView::FProjector::ToMap(const FVector2D& Screen) const
 {
 	if (!b3D)
 	{
-		return Center + (Screen - ScreenCenter) / Zoom;
+		const FVector2D S = (Screen - ScreenCenter) / Zoom;
+		if (TiltRad <= 1e-4)
+		{
+			return Center + S;
+		}
+		const double Sn = FMath::Sin(TiltRad), Cs = FMath::Cos(TiltRad);
+		// Invert Y = dy*Cs*D/(D - dy*Sn) on the ground plane; above the horizon clamp to far away.
+		const double Den = CamDistM * Cs + S.Y * Sn;
+		const double Dy = Den > CamDistM * 0.05 ? S.Y * CamDistM / Den : -CamDistM / Sn * 0.95;
+		const double K = CamDistM / FMath::Max(CamDistM - Dy * Sn, CamDistM * 0.02);
+		return Center + FVector2D(S.X / K, Dy);
 	}
 	APlayerController* Controller = PC.Get();
 	UPuffersMapSubsystem* M = Map.Get();
@@ -138,6 +159,54 @@ FVector2D SPuffersMapView::FProjector::ToMap(const FVector2D& Screen) const
 	}
 	const double T = (PlaneZ - WorldPos.Z) / WorldDir.Z;
 	return M->WorldToMap(WorldPos + WorldDir * FMath::Max(T, 0.0));
+}
+
+FBox2D SPuffersMapView::FProjector::ViewBox(const FVector2D& Size) const
+{
+	FBox2D B(ForceInit);
+	for (const FVector2D& C : { FVector2D(0, 0), FVector2D(Size.X, 0), Size, FVector2D(0, Size.Y) })
+	{
+		B += ToMap(C);
+	}
+	return B;
+}
+
+FSlateRect SPuffersMapView::ViewToggleRect(const FVector2D& Size)
+{
+	const FVector2D C(Size.X * 0.5, Size.Y - 92.0);
+	return FSlateRect((float)(C.X - 72.0), (float)(C.Y - 20.0), (float)(C.X + 72.0), (float)(C.Y + 20.0));
+}
+
+void SPuffersMapView::SetView3D(bool bOn)
+{
+	UPuffersMapSubsystem* M = Map.Get();
+	if (!M || Mode == EMode::Minimap || bOn == (TiltGoal > 0.5f))
+	{
+		return;
+	}
+	TiltGoal = bOn ? 1.f : 0.f;
+	if (bOn)
+	{
+		// Start the photoreal camera now: it blends in under the tilting map, which then fades away.
+		FString Why;
+		if (Mode == EMode::FullScreen && M->Is3DAvailable(Why))
+		{
+			M->SetViewMode(EPuffersMapViewMode::World3D);
+			ShowToast(TEXT("3D view"));
+		}
+		else
+		{
+			ShowToast(TEXT("3D map"));
+		}
+	}
+	else
+	{
+		if (M->GetViewMode() == EPuffersMapViewMode::World3D)
+		{
+			M->SetViewMode(EPuffersMapViewMode::Map2D);
+		}
+		ShowToast(TEXT("2D map"));
+	}
 }
 
 // ------------------------------------------------------------------------------------------------ Setup
@@ -162,6 +231,11 @@ void SPuffersMapView::Construct(const FArguments& InArgs)
 		{
 			// Opening animation starts a little zoomed in and settles out.
 			Zoom = TargetZoom * 1.6;
+		}
+		// Reopening in 3D picks up where the player left it.
+		if (Mode != EMode::Minimap && M->GetViewMode() == EPuffersMapViewMode::World3D)
+		{
+			TiltT = TiltGoal = 1.f;
 		}
 	}
 	Toggles.bLegend = (Mode == EMode::FullScreen);
@@ -233,11 +307,18 @@ SPuffersMapView::FProjector SPuffersMapView::MakeProjector(const FGeometry& Geom
 	if (UPuffersMapSubsystem* M = Map.Get())
 	{
 		P.PC = M->GetLocalPlayerController();
-		if (Mode == EMode::FullScreen && M->GetViewMode() == EPuffersMapViewMode::World3D && M->GetCameraRig())
+		// The real-world projection takes over only once the map has finished tilting and the camera blend is done.
+		if (Mode == EMode::FullScreen && M->GetViewMode() == EPuffersMapViewMode::World3D && M->GetCameraRig()
+			&& TiltT >= 1.f && PhotoAt >= 0.0 && Time - PhotoAt >= PhotoBlendSeconds)
 		{
 			P.b3D = true;
 			P.FocusZ = (float)(M->GetCameraRig()->GetFocus().Z / 100.0);
 		}
+	}
+	if (!P.b3D && Mode != EMode::Minimap)
+	{
+		P.TiltRad = FMath::DegreesToRadians(TiltDeg) * TiltEase();
+		P.CamDistM = 1.6 * (Size.Y * 0.5) / P.Zoom;
 	}
 	return P;
 }
@@ -262,6 +343,22 @@ void SPuffersMapView::Tick(const FGeometry& AllottedGeometry, const double InCur
 		ClosingAt = 1e12;
 		Done.ExecuteIfBound();
 		return;
+	}
+
+	// 2D <-> 3D: tilt toward the goal; remember when the photoreal rig became active.
+	if (Mode != EMode::Minimap)
+	{
+		const float Step = Dt / TiltSeconds;
+		TiltT = TiltGoal > TiltT ? FMath::Min(TiltGoal, TiltT + Step) : FMath::Max(TiltGoal, TiltT - Step);
+		const bool bPhoto = M->GetViewMode() == EPuffersMapViewMode::World3D && M->GetCameraRig() != nullptr;
+		if (bPhoto && PhotoAt < 0.0)
+		{
+			PhotoAt = Time;
+		}
+		else if (!bPhoto)
+		{
+			PhotoAt = -1.0;
+		}
 	}
 
 	// Zoom eases toward its target (exponential, frame-rate independent), anchored under the cursor.
@@ -320,6 +417,15 @@ FReply SPuffersMapView::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 		return FReply::Unhandled();
 	}
 	const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && Mode == EMode::FullScreen)
+	{
+		const FSlateRect R = ViewToggleRect(MyGeometry.GetLocalSize());
+		if (R.ContainsPoint(FVector2f(Local)))
+		{
+			SetView3D(Local.X > (R.Left + R.Right) * 0.5f);
+			return FReply::Handled();
+		}
+	}
 	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		bDragging = true;
@@ -447,11 +553,7 @@ FReply SPuffersMapView::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& 
 	}
 	if (Key == EKeys::T || Key == EKeys::Gamepad_FaceButton_Top)
 	{
-		const bool bTo3D = M->GetViewMode() == EPuffersMapViewMode::Map2D;
-		if (M->SetViewMode(bTo3D ? EPuffersMapViewMode::World3D : EPuffersMapViewMode::Map2D))
-		{
-			ShowToast(bTo3D ? TEXT("3D view") : TEXT("2D map"));
-		}
+		SetView3D(!IsView3D());
 		return FReply::Handled();
 	}
 	if (Key == EKeys::L)
@@ -705,19 +807,22 @@ int32 SPuffersMapView::OnPaint(const FPaintArgs& Args, const FGeometry& G, const
 	const FProjector P = MakeProjector(G);
 	int32 L = LayerId;
 
-	if (!P.b3D)
+	// After the photoreal camera takes over, the flat map fades out over it.
+	const float MapFade = P.b3D ? 1.f - FMath::Clamp((float)((Time - PhotoAt - PhotoBlendSeconds) / 0.45), 0.f, 1.f) : 1.f;
+	if (!P.b3D || MapFade > 0.f)
 	{
-		PaintBase(G, P, Out, L++, Alpha);
+		PaintBase(G, P, Out, L++, Alpha * MapFade);
 		if (Toggles.bSatellite && M->HasSatellite())
 		{
-			PaintSatellite(G, P, Out, L++, Alpha);
+			// Satellite tiles are flat images: they fade out while the map tilts.
+			PaintSatellite(G, P, Out, L++, Alpha * MapFade * (P.b3D ? 1.f : 1.f - TiltEase()));
 		}
 		if (Toggles.bAreas)
 		{
-			PaintAreas(G, P, Out, L++, Alpha);
+			PaintAreas(G, P, Out, L++, Alpha * MapFade);
 		}
 	}
-	else
+	if (P.b3D)
 	{
 		// Slight darkening so overlays read against the photoreal world.
 		FBatch Dim;
@@ -729,6 +834,10 @@ int32 SPuffersMapView::OnPaint(const FPaintArgs& Args, const FGeometry& G, const
 	{
 		PaintRoads(G, P, Out, L, Alpha);
 		L += 3;
+	}
+	if (P.IsTilted() && Toggles.bAreas)
+	{
+		PaintExtrusions(G, P, Out, L++, Alpha);
 	}
 	if (Toggles.bBuilds)
 	{
@@ -783,7 +892,7 @@ void SPuffersMapView::PaintSatellite(const FGeometry& G, const FProjector& P, FS
 	UPuffersMapSubsystem* M = Map.Get();
 	const TArray<FPuffersMapTileRef>& Tiles = M->GetSatelliteTiles();
 	const FVector2D S = G.GetLocalSize();
-	const FBox2D View(P.ToMap(FVector2D::ZeroVector), P.ToMap(S));
+	const FBox2D View = P.ViewBox(S);
 	const FPuffersMapConfig& C = M->GetConfig();
 	const double TexelM = C.SatelliteTileM / FMath::Max(C.SatelliteTilePx, 1);
 	const double MetersPerPx = 1.0 / P.Zoom;
@@ -827,7 +936,7 @@ void SPuffersMapView::PaintAreas(const FGeometry& G, const FProjector& P, FSlate
 	const FPuffersMapStyle& St = M->GetStyle();
 	const FSlateRenderTransform& T = G.GetAccumulatedRenderTransform();
 	const FVector2D S = G.GetLocalSize();
-	const FBox2D View(P.ToMap(FVector2D::ZeroVector), P.ToMap(S));
+	const FBox2D View = P.ViewBox(S);
 	const bool bSat = Toggles.bSatellite && M->HasSatellite();
 	const double Z = P.Zoom;
 
@@ -864,7 +973,7 @@ void SPuffersMapView::PaintAreas(const FGeometry& G, const FProjector& P, FSlate
 		case EPuffersMapAreaKind::Sidewalk: if (Z > 1.0) { Col = St.Sidewalk; } break;
 		case EPuffersMapAreaKind::Plaza: if (Z > 0.6) { Col = St.Sidewalk; } break;
 		case EPuffersMapAreaKind::Building:
-			if (Z > 0.35)
+			if (Z > 0.35 && !P.IsTilted())
 			{
 				Col = St.BuildingFill;
 				Edge = St.BuildingEdge;
@@ -920,7 +1029,7 @@ void SPuffersMapView::PaintRoads(const FGeometry& G, const FProjector& P, FSlate
 	const FSlateRenderTransform& T = G.GetAccumulatedRenderTransform();
 	const FVector2D S = G.GetLocalSize();
 	const double Z = P.Zoom;
-	FBox2D View(P.ToMap(FVector2D::ZeroVector), P.ToMap(S));
+	FBox2D View = P.ViewBox(S);
 	if (P.b3D)
 	{
 		View = View.ExpandBy(View.GetSize().GetMax());
@@ -1099,6 +1208,19 @@ void SPuffersMapView::PaintBuilds(const FGeometry& G, const FProjector& P, FSlat
 			// Too small to show a footprint: a dot so every build is still visible zoomed out.
 			AddCircle(Fill, T, CenterS, 3.2f, WithAlpha(UseCol, Alpha));
 			AddRing(Edge, T, CenterS, 3.6f, 1.f, FLinearColor(0, 0, 0, 0.8f * Alpha), 12);
+		}
+		else if (P.IsTilted())
+		{
+			// Rise out of the ground with the tilt; a new build also grows in over its first 1.5 s.
+			const double Age = M->GetBuildAge(Bd.BuildId);
+			const float Grow = Age < 1.5 ? (float)(Age / 1.5) : 1.f;
+			const float H = FMath::Max(Bd.HeightM, 4.f) * (float)(P.TiltRad / FMath::DegreesToRadians(TiltDeg)) * Grow;
+			FLinearColor C = UseCol;
+			if (Bd.State == EPuffersMapBuildState::UnderConstruction) C = FLinearColor(1.f, 0.62f, 0.11f);
+			if (Bd.State == EPuffersMapBuildState::ForSale) C = FMath::Lerp(UseCol, FLinearColor(1.f, 0.85f, 0.2f), 0.5f + 0.5f * FMath::Sin((float)Time * 4.f));
+			if (Bd.State == EPuffersMapBuildState::Raided) C = FLinearColor(0.85f, 0.15f, 0.12f);
+			PuffersMapGeo::Triangulate(Bd.Footprint, Tris);
+			AddPrism(Fill, T, P, Bd.Footprint, Tris, H, WithAlpha(C, Alpha));
 		}
 		else
 		{
@@ -1343,7 +1465,7 @@ int32 SPuffersMapView::PaintLabels(const FGeometry& G, const FProjector& P, FSla
 	// Street names on named roads when zoomed in (horizontal, at the middle of each visible road).
 	if (Z > 0.45 && !P.b3D)
 	{
-		const FBox2D View(P.ToMap(FVector2D::ZeroVector), P.ToMap(S));
+		const FBox2D View = P.ViewBox(S);
 		TArray<int32> Visible;
 		D.QueryRoads(View, Visible);
 		TSet<FString> Done;
@@ -1613,10 +1735,15 @@ int32 SPuffersMapView::PaintChrome(const FGeometry& G, const FProjector& P, FSla
 		}
 	}
 
+	if (Mode == EMode::FullScreen)
+	{
+		PaintViewToggle(G, Out, Layer, Alpha);
+	}
+
 	// Hint bar.
 	const FString Hint = P.b3D
-		? TEXT("Drag pan   Wheel height   Right-click waypoint   R roads   T 2D map   F follow   M close")
-		: FString::Printf(TEXT("Drag pan   Wheel zoom   Right-click waypoint   F follow   T 3D view   L legend%s   M close"), M->HasSatellite() ? TEXT("   V satellite") : TEXT(""));
+		? TEXT("Drag pan   Wheel height   Right-click waypoint   R roads   T or 2D button: map   F follow   M close")
+		: FString::Printf(TEXT("Drag pan   Wheel zoom   Right-click waypoint   F follow   T or 3D button   L legend%s   M close"), M->HasSatellite() ? TEXT("   V satellite") : TEXT(""));
 	const FVector2D HintSize = MeasureText(Hint, 10, FontRegular);
 	const FVector2D HintPos((S.X - HintSize.X) * 0.5, S.Y - 42);
 	DrawPanel(G, Out, Layer, HintPos - FVector2D(16, 8), HintSize + FVector2D(32, 16), WithAlpha(St.Panel, Alpha));
@@ -1676,4 +1803,104 @@ int32 SPuffersMapView::PaintChrome(const FGeometry& G, const FProjector& P, FSla
 
 	Flush(B, Out, Layer + 2);
 	return Layer + 6;
+}
+
+// ------------------------------------------------------------------------------------------------ 2D / 3D
+
+void SPuffersMapView::AddPrism(FBatch& B, const FSlateRenderTransform& T, const FProjector& P, const TArray<FVector2D>& Poly, const TArray<int32>& Tris,
+	float HeightM, FLinearColor Color)
+{
+	const int32 N = Poly.Num();
+	if (N < 3)
+	{
+		return;
+	}
+	TArray<FVector2D, TInlineAllocator<32>> Lo, Hi;
+	Lo.SetNum(N);
+	Hi.SetNum(N);
+	for (int32 i = 0; i < N; ++i)
+	{
+		if (!P.ToScreen(Poly[i], Lo[i], 0.f) || !P.ToScreen(Poly[i], Hi[i], HeightM))
+		{
+			return;
+		}
+	}
+	// Outward normal sign depends on winding; light comes from the south-west, the camera looks north.
+	const double Wind = PuffersMapGeo::SignedArea(Poly) > 0.0 ? 1.0 : -1.0;
+	const FVector2D Light = FVector2D(-0.55, 0.83).GetSafeNormal();
+	// Walls facing away from the camera (north-facing) first, then the rest, then the roof on top.
+	for (int32 Pass = 0; Pass < 2; ++Pass)
+	{
+		for (int32 i = 0; i < N; ++i)
+		{
+			const int32 j = (i + 1) % N;
+			const FVector2D E = Poly[j] - Poly[i];
+			const FVector2D Nrm = FVector2D(E.Y, -E.X).GetSafeNormal() * Wind;
+			const bool bBack = Nrm.Y < 0.0;
+			if (bBack != (Pass == 0))
+			{
+				continue;
+			}
+			const float Shade = 0.55f + 0.3f * (float)FVector2D::DotProduct(Nrm, Light);
+			FLinearColor C = Color * Shade;
+			C.A = Color.A;
+			AddQuad(B, T, Lo[i], Lo[j], Hi[j], Hi[i], ToColor(C));
+		}
+	}
+	FLinearColor Roof = Color * 1.08f;
+	Roof.A = Color.A;
+	TArray<FVector2D> Top(Hi.GetData(), N);
+	AddPolygon(B, T, Top, Tris, Roof);
+}
+
+void SPuffersMapView::PaintExtrusions(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const
+{
+	const UPuffersMapSubsystem* M = Map.Get();
+	const FPuffersMapDataSet& D = M->GetData();
+	const FPuffersMapStyle& St = M->GetStyle();
+	if (P.Zoom < 0.2)
+	{
+		return;
+	}
+	const FSlateRenderTransform& T = G.GetAccumulatedRenderTransform();
+	TArray<int32> Visible;
+	D.QueryAreas(P.ViewBox(G.GetLocalSize()), Visible);
+	Visible.RemoveAll([&D](int32 I) { return D.Areas[I].Kind != EPuffersMapAreaKind::Building || D.Areas[I].Polygon.Num() < 3; });
+	// Far (north) to near so nearer buildings cover the ones behind.
+	Visible.Sort([&D](int32 A, int32 B) { return D.GetAreaBounds(A).GetCenter().Y < D.GetAreaBounds(B).GetCenter().Y; });
+	const float Rise = (float)(P.TiltRad / FMath::DegreesToRadians(TiltDeg));
+	const FLinearColor Base = FMath::Lerp(St.BuildingFill, St.BuildingEdge, 0.6f);
+	FBatch B;
+	for (int32 I : Visible)
+	{
+		const FPuffersMapArea& A = D.Areas[I];
+		const float H = (A.HeightM > 0.5f ? A.HeightM : 12.f) * Rise;
+		// Taller buildings read a touch lighter, like the 3D preview.
+		const FLinearColor C = FMath::Lerp(Base, St.Label, FMath::Clamp(A.HeightM / 400.f, 0.f, 0.25f));
+		AddPrism(B, T, P, A.Polygon, A.Triangles, H, WithAlpha(C, Alpha));
+		if (B.Verts.Num() > 60000)
+		{
+			Flush(B, Out, Layer);
+		}
+	}
+	Flush(B, Out, Layer);
+}
+
+void SPuffersMapView::PaintViewToggle(const FGeometry& G, FSlateWindowElementList& Out, int32 Layer, float Alpha) const
+{
+	const UPuffersMapSubsystem* M = Map.Get();
+	const FPuffersMapStyle& St = M->GetStyle();
+	const FSlateRect R = ViewToggleRect(G.GetLocalSize());
+	const FVector2D Pos(R.Left, R.Top), Size(R.Right - R.Left, R.Bottom - R.Top);
+	DrawPanel(G, Out, Layer, Pos - FVector2D(4, 4), Size + FVector2D(8, 8), WithAlpha(St.Panel, Alpha));
+	DrawPanel(G, Out, Layer + 1, Pos, Size, FLinearColor(1, 1, 1, 0.06f * Alpha));
+	// The thumb slides with the tilt, so it moves exactly as the map animates.
+	const float Half = (float)Size.X * 0.5f;
+	const FVector2D Thumb = Pos + FVector2D(3.0 + (Half - 3.0) * TiltEase(), 3.0);
+	DrawPanel(G, Out, Layer + 2, Thumb, FVector2D(Half - 3.0, Size.Y - 6.0), WithAlpha(St.Accent, Alpha));
+	const FLinearColor Dark(0.08f, 0.06f, 0.02f, Alpha);
+	const FLinearColor Dim = WithAlpha(St.Label, 0.6f * Alpha);
+	const float E = TiltEase();
+	DrawText(G, Out, Layer + 3, TEXT("2D"), Pos + FVector2D(Half * 0.5, Size.Y * 0.5), 13, FMath::Lerp(Dark, Dim, E), true, false);
+	DrawText(G, Out, Layer + 3, TEXT("3D"), Pos + FVector2D(Half * 1.5, Size.Y * 0.5), 13, FMath::Lerp(Dim, Dark, E), true, false);
 }

@@ -69,6 +69,11 @@ public:
 	void FocusOn(const FVector2D& MapPoint, float Zoom);
 	FLayerToggles& Layers() { return Toggles; }
 
+	// The 2D / 3D switch (on-screen button, T, gamepad Y). 3D tilts the map with extruded buildings on every machine,
+	// then hands over to the photoreal camera rig where the GPU can render the city.
+	void SetView3D(bool bOn);
+	bool IsView3D() const { return TiltGoal > 0.5f; }
+
 private:
 	// A batch of colored triangles drawn with one MakeCustomVerts call.
 	struct FBatch
@@ -86,12 +91,18 @@ private:
 		double Zoom = 1.0;
 		double DpiScale = 1.0;
 		float FocusZ = 0.f;
+		// Stylized 3D: the flat map tilted back by TiltRad, seen from CamDistM meters (0 = flat 2D).
+		double TiltRad = 0.0;
+		double CamDistM = 1.0;
 		TWeakObjectPtr<APlayerController> PC;
 		TWeakObjectPtr<UPuffersMapSubsystem> Map;
 
 		bool ToScreen(const FVector2D& P, FVector2D& Out, float ZMeters) const;
 		bool ToScreen(const FVector2D& P, FVector2D& Out) const { return ToScreen(P, Out, FocusZ); }
 		FVector2D ToMap(const FVector2D& Screen) const;
+		// Map-space box that covers the whole screen (all four corners, so it also holds when tilted).
+		FBox2D ViewBox(const FVector2D& Size) const;
+		bool IsTilted() const { return !b3D && TiltRad > 1e-3; }
 		double PxPerM() const { return Zoom; }
 	};
 
@@ -110,6 +121,16 @@ private:
 	bool bHasZoomAnchor = false;
 	FVector2D ZoomAnchorMap = FVector2D::ZeroVector;
 	FVector2D ZoomAnchorScreen = FVector2D::ZeroVector;
+
+	// 2D <-> 3D animation. TiltT runs 0..1 toward TiltGoal; PhotoAt is when the photoreal rig took over (-1 = not).
+	float TiltT = 0.f;
+	float TiltGoal = 0.f;
+	double PhotoAt = -1.0;
+	static constexpr float TiltDeg = 32.f;      // matches the camera rig's 58 degree pitch
+	static constexpr float TiltSeconds = 0.9f;
+	static constexpr double PhotoBlendSeconds = 0.8;
+	float TiltEase() const { return TiltT * TiltT * (3.f - 2.f * TiltT); }
+	static FSlateRect ViewToggleRect(const FVector2D& Size);
 
 	double Time = 0.0;
 	double OpenedAt = 0.0;
@@ -150,6 +171,11 @@ private:
 	void PaintSatellite(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
 	void PaintAreas(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
 	void PaintRoads(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
+	// Tilted view only: buildings as lit prisms, far to near.
+	void PaintExtrusions(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
+	static void AddPrism(FBatch& B, const FSlateRenderTransform& T, const FProjector& P, const TArray<FVector2D>& Poly, const TArray<int32>& Tris,
+		float HeightM, FLinearColor Color);
+	void PaintViewToggle(const FGeometry& G, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
 	void PaintBuilds(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
 	void PaintRoute(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;
 	int32 PaintLabels(const FGeometry& G, const FProjector& P, FSlateWindowElementList& Out, int32 Layer, float Alpha) const;

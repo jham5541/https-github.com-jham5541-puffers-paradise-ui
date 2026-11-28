@@ -8,13 +8,15 @@ The in-game map of Puffington: every road, path, tunnel and bridge, the counties
 | drag, wheel, double-click | pan, zoom at the cursor, zoom in |
 | right-click | set a waypoint (right-click it again to clear). The route follows real roads. |
 | **F** | follow me again |
-| **T** | 2D map / 3D view |
+| **2D / 3D button** (bottom center), **T** | animates between the flat map and 3D (see below) |
 | **L** / **V** / **R** | legend / satellite tiles / roads over the 3D view |
 | Gamepad | left stick pan, right stick zoom, A waypoint, Y 2D/3D, B close |
 
 The minimap sits bottom-left (300 x 200) with the street and county you're in and the route distance. `puffers.Map.Minimap 0` hides it.
 
-A browser preview of the look and animations (world-plan data, simulated builds) is at https://claude.ai/artifact/JqnD3kVAhZNvL2ixcVhiQc.
+A three.js browser version of the map (same 2D/3D button, dense City Sample style stand-in streets, traffic, simulated live builds) is in
+`Tools/MapPreview/` (`python3 Tools/MapPreview/build.py`, then open `index.html`) and online at https://claude.ai/artifact/JqnD3kVAhZNvL2ixcVhiQc.
+Drop any `Generated/<Level>.mappack.json` on it to replace the stand-in with surveyed roads and buildings.
 
 ## How it fits together
 
@@ -97,9 +99,19 @@ builds persist in `Saved/PuffersMap/Builds.json`.
 Backend: `backend/src/routes/map.ts`, table `map_builds` in `backend/db/schema.sql`. The backend checks the key, the
 footprint size and that only the owner can change a live build.
 
-## 3D view (photoreal)
+## 3D view
 
-**T** flies a camera up from the player to look down at the real world at ~58°, north up. The wheel sets the height,
+The **2D / 3D** button (or **T**, or gamepad **Y**) tilts the map back over 0.9 s: north recedes, surveyed buildings and
+player builds rise out of the ground as lit blocks, and roads, labels and the route follow the perspective. This
+stylized 3D works on every machine, the Intel Mac included. The button's thumb slides with the tilt.
+
+Where the GPU can render the city, the photoreal camera starts at the same moment, blends in under the tilting map, and
+the map then fades away to the real world at the same 58° angle. If the frame rate can't keep up, it falls back to the
+stylized 3D, not to flat 2D.
+
+### Photoreal
+
+The photoreal step flies a camera up from the player to look down at the real world at ~58°, north up. The wheel sets the height,
 drag pans, and the map's labels, markers, builds and route are drawn on top (roads too with **R**). Because the camera
 becomes the view target, World Partition streams the city around it and HLODs fill the distance, so it's the actual
 game world, not a picture of it.
